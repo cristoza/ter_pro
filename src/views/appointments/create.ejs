@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Appointment</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Create Appointment</h1>
+        <form id="create-appointment-form">
+            <div class="form-group">
+                <label for="patientName">Patient Name:</label>
+                <input type="text" id="patientName" name="patientName" required>
+            </div>
+            <div class="form-group">
+                <label for="date">Preferred Date (optional):<br><span style="font-weight:normal;font-size:0.95em;">Leave blank to auto-select soonest available</span></label>
+                <input type="date" id="date" name="date">
+            </div>
+            <div class="form-group">
+                <label for="time">Preferred Time (optional):<br><span style="font-weight:normal;font-size:0.95em;">Leave blank to auto-select soonest available</span></label>
+                <input type="time" id="time" name="time">
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes:</label>
+                <textarea id="notes" name="notes"></textarea>
+            </div>
+            <button type="submit">Create Appointment</button>
+        </form>
+        <div id="proposed-slot" style="display:none; margin-top:20px; padding:15px; border:1px solid #ccc; background:#f9f9f9;">
+            <p id="proposed-message"></p>
+            <button id="confirm-proposed">Confirm</button>
+            <button id="reject-proposed">Choose Another Time</button>
+        </div>
+        <div id="create-error" style="color:crimson; margin-top:10px;"></div>
+        <a href="/appointments">Back to Appointments</a>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('create-appointment-form');
+        const errorDiv = document.getElementById('create-error');
+        const proposedDiv = document.getElementById('proposed-slot');
+        const proposedMsg = document.getElementById('proposed-message');
+        const confirmBtn = document.getElementById('confirm-proposed');
+        const rejectBtn = document.getElementById('reject-proposed');
+        let proposedData = null;
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            errorDiv.textContent = '';
+            proposedDiv.style.display = 'none';
+            proposedData = null;
+            const data = Object.fromEntries(new FormData(form));
+            try {
+                const res = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.status === 201) {
+                    window.location.href = '/appointments';
+                    return;
+                } else if (res.status === 409) {
+                    // Try to get a proposed slot
+                    const proposeRes = await fetch('/api/appointments/propose', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (proposeRes.ok) {
+                        const proposal = await proposeRes.json();
+                        proposedData = { ...data, ...proposal };
+                        proposedMsg.textContent = `Requested slot is unavailable. Next available slot: ${proposal.date} at ${proposal.time}. Do you want to book this slot?`;
+                        proposedDiv.style.display = 'block';
+                    } else {
+                        errorDiv.textContent = 'No available slots found for your request.';
+                    }
+                } else if (res.status === 404) {
+                    errorDiv.textContent = 'Patient not found. Please check the patient information.';
+                } else {
+                    const err = await res.json();
+                    errorDiv.textContent = err.message || 'Error creating appointment.';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+            }
+        });
+
+        confirmBtn.addEventListener('click', async function() {
+            if (!proposedData) return;
+            errorDiv.textContent = '';
+            try {
+                const res = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(proposedData)
+                });
+                if (res.status === 201) {
+                    window.location.href = '/appointments';
+                } else {
+                    const err = await res.json();
+                    errorDiv.textContent = err.message || 'Error confirming appointment.';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+            }
+        });
+
+        rejectBtn.addEventListener('click', function() {
+            proposedDiv.style.display = 'none';
+            proposedData = null;
+        });
+    });
+    </script>
+</body>
+</html>

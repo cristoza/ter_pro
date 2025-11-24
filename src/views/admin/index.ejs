@@ -1,0 +1,114 @@
+<%- include('../layout') %>
+
+<div class="admin-dashboard" style="max-width: 1200px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 40px;">
+    <h1>👋 Bienvenido, Admin</h1>
+    <p class="muted" style="font-size: 16px;">Gestiona las operaciones de tu clínica desde aquí</p>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="stat">
+      <div class="stat-value">4</div>
+      <div class="stat-label">Módulos Totales</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">✓</div>
+      <div class="stat-label">Sistema Activo</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">∞</div>
+      <div class="stat-label">Acceso Completo</div>
+    </div>
+  </div>
+
+  <div class="card" style="max-width: 900px;">
+    <div class="card-header" style="text-align: center;">
+      <h2>📋 Acciones Rápidas</h2>
+    </div>
+    <ul style="list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; padding: 0;">
+      <li>
+        <a href="/admin/therapists" class="action-card">
+          <span class="action-icon">👨‍⚕️</span>
+          <div class="action-content">
+            <div class="action-title">Terapeutas</div>
+            <small class="muted">Gestionar perfiles de terapeutas</small>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/patients" class="action-card">
+          <span class="action-icon">🧑‍🤝‍🧑</span>
+          <div class="action-content">
+            <div class="action-title">Pacientes</div>
+            <small class="muted">Registros e historial de pacientes</small>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/appointments" class="action-card">
+          <span class="action-icon">📅</span>
+          <div class="action-content">
+            <div class="action-title">Citas</div>
+            <small class="muted">Agenda y reservas</small>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/availability" class="action-card">
+          <span class="action-icon">🕐</span>
+          <div class="action-content">
+            <div class="action-title">Disponibilidad</div>
+            <small class="muted">Horarios de terapeutas</small>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a href="/admin/users" class="action-card">
+          <span class="action-icon">👥</span>
+          <div class="action-content">
+            <div class="action-title">Usuarios</div>
+            <small class="muted">Cuentas de usuario y roles</small>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<style>
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--accent);
+}
+
+.action-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.action-content {
+  width: 100%;
+}
+
+.action-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+</style>

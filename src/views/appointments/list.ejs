@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment List</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../layout') %>
+    <div class="container">
+        <h1>Appointment List</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Patient Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% appointments.forEach(appointment => { %>
+                    <tr>
+                        <td><%= appointment.date %></td>
+                        <td><%= appointment.time %></td>
+                        <td><%= appointment.patientName %></td>
+                        <td>
+                            <a href="/appointments/edit/<%= appointment.id %>">Edit</a>
+                            <a href="/appointments/delete/<%= appointment.id %>">Delete</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+        <a href="/appointments/create">Create New Appointment</a>
+    </div>
+</body>
+</html>

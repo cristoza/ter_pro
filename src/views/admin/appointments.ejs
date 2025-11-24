@@ -1,0 +1,104 @@
+<%- include('../layout') %>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1>📅 Citas</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Programa y gestiona las citas de pacientes</p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
+    </div>
+  </div>
+
+  <!-- Create Appointment Form -->
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>➕ Crear Cita</h2>
+    </div>
+    
+    <form id="appointment-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha (opcional)</label>
+          <input type="date" name="date" />
+          <small class="muted">Dejar en blanco para autoseleccionar la fecha más próxima disponible</small>
+        </div>
+        <div class="form-group">
+          <label>Hora (opcional)</label>
+          <input type="time" name="time" />
+          <small class="muted">Dejar en blanco para autoseleccionar la hora más próxima disponible</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cédula</label>
+          <div style="display: flex; gap: 12px;">
+            <input type="text" name="patientCedula" placeholder="Ingrese cédula de 10 dígitos" style="flex: 1;" />
+            <button type="button" class="btn btn-secondary check-patient" style="white-space: nowrap;">🔍 Verificar</button>
+          </div>
+          <div class="cedula-result" aria-live="polite" style="margin-top: 8px; font-size: 14px;"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del paciente</label>
+          <input type="text" name="patientName" placeholder="Nombre completo" required />
+        </div>
+        <div class="form-group">
+          <label>Contacto</label>
+          <input type="text" name="patientContact" placeholder="Teléfono o correo electrónico" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Serie (# sesiones)</label>
+          <select name="occurrences">
+            <option value="1">1 sesión</option>
+            <option value="5">5 sesiones</option>
+            <option value="10">10 sesiones</option>
+          </select>
+          <small class="muted">Número de citas consecutivas</small>
+        </div>
+        <div class="form-group">
+          <label>Duración (minutos)</label>
+          <input type="number" name="durationMinutes" min="15" max="180" placeholder="45" value="45" />
+          <small class="muted">15-180 minutos</small>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">
+          ✓ Crear Cita
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Existing Appointments Table -->
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>📋 Citas Existentes</h2>
+    </div>
+    <div class="table-responsive">
+      <table id="appointments-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Paciente</th>
+            <th>Contacto</th>
+            <th>Terapeuta</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>

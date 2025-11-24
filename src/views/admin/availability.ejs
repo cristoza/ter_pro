@@ -1,0 +1,64 @@
+<%- include('../layout') %>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1>🕐 Disponibilidad</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Configura los horarios de disponibilidad de terapeutas</p>
+    <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>➕ Crear Disponibilidad</h2>
+    </div>
+    <form id="availability-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Terapeuta</label>
+          <select name="therapistId" id="avail-therapist" required>
+            <option value="">Seleccione un terapeuta</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Día de la Semana</label>
+          <select name="dayOfWeek" required>
+            <option value="0">Domingo</option>
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miércoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Hora de Inicio</label>
+          <input type="time" name="startTime" required>
+        </div>
+        <div class="form-group">
+          <label>Hora de Fin</label>
+          <input type="time" name="endTime" required>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 24px;">
+        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">✓ Guardar Disponibilidad</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>📋 Disponibilidad Existente</h2>
+    </div>
+    <div class="table-responsive">
+      <table id="availability-table">
+        <thead><tr><th>ID</th><th>Terapeuta</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Acciones</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>

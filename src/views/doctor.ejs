@@ -1,0 +1,89 @@
+<%- include('./layout-simple') %>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1>👨‍⚕️ Panel del Doctor</h1>
+    <p class="muted" style="font-size: 16px;">Crea y gestiona las citas de tus pacientes</p>
+  </div>
+
+  <!-- Create Appointment Form -->
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>➕ Crear Nueva Cita</h2>
+      <p class="muted" style="font-size: 14px; margin-top: 8px;">La fecha y hora se asignarán automáticamente según disponibilidad</p>
+    </div>
+    
+    <form id="appointment-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cédula</label>
+          <div style="display: flex; gap: 12px;">
+            <input type="text" name="patientCedula" placeholder="Ingrese cédula de 10 dígitos" style="flex: 1;" />
+            <button type="button" class="btn btn-secondary check-patient" style="white-space: nowrap;">🔍 Verificar</button>
+          </div>
+          <div class="cedula-result" aria-live="polite" style="margin-top: 8px; font-size: 14px;"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre del paciente</label>
+          <input type="text" name="patientName" placeholder="Nombre completo" required />
+        </div>
+        <div class="form-group">
+          <label>Contacto</label>
+          <input type="text" name="patientContact" placeholder="Teléfono o correo electrónico" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Serie (# sesiones)</label>
+          <select name="occurrences">
+            <option value="1">1 sesión</option>
+            <option value="5">5 sesiones</option>
+            <option value="10">10 sesiones</option>
+          </select>
+          <small class="muted">Número de citas consecutivas</small>
+        </div>
+        <div class="form-group">
+          <label>Duración (minutos)</label>
+          <input type="number" name="durationMinutes" min="15" max="180" placeholder="45" value="45" />
+          <small class="muted">15-180 minutos</small>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 24px;">
+        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">
+          ✓ Crear Cita
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Recent Appointments Table -->
+  <div class="card">
+    <div class="card-header" style="text-align: center;">
+      <h2>📋 Citas Recientes</h2>
+      <p class="muted" style="font-size: 14px; margin-top: 8px;">Vista de solo lectura de las últimas citas creadas</p>
+    </div>
+    <div class="table-responsive">
+      <table id="appointments-table" data-role="doctor">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Paciente</th>
+            <th>Contacto</th>
+            <th>Terapeuta</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>

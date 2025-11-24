@@ -1,0 +1,447 @@
+<%- include('./layout-simple') %>
+
+<div class="therapist-container">
+  <!-- Header -->
+  <div class="therapist-header">
+    <h1>👨‍⚕️ Mi Horario</h1>
+    <p class="welcome-text">¡Bienvenido, <strong><%= therapistName %></strong>!</p>
+    <p class="subtitle">Estas son tus citas programadas</p>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="card filter-card">
+    <div class="card-header">
+      <h2>🔍 Filtrar Citas</h2>
+    </div>
+    <div class="filter-body">
+      <div class="filter-controls">
+        <div class="form-group">
+          <label for="filter-date">Filtrar por fecha</label>
+          <input type="date" id="filter-date">
+        </div>
+        <button id="clear-filter" class="btn btn-secondary">🔄 Mostrar Todas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Card -->
+  <div class="card schedule-card">
+    <div class="card-header">
+      <h2>📋 Mis Citas Programadas</h2>
+      <p class="appointment-count"><span id="count">0</span> citas</p>
+    </div>
+    
+    <!-- Desktop Table View -->
+    <div class="table-responsive desktop-view">
+      <table id="schedule-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Duración</th>
+            <th>Paciente</th>
+            <th>Contacto</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
+    <!-- Mobile Card View -->
+    <div id="mobile-appointments" class="mobile-view"></div>
+  </div>
+</div>
+
+<style>
+.therapist-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+.therapist-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 0 16px;
+}
+
+.therapist-header h1 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.welcome-text {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: 8px 0;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 4px 0 0 0;
+}
+
+.filter-card {
+  margin-bottom: 24px;
+}
+
+.filter-body {
+  padding: 20px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.filter-controls .form-group {
+  margin: 0;
+  flex: 1 1 200px;
+  max-width: 300px;
+}
+
+.filter-controls .btn {
+  white-space: nowrap;
+}
+
+.schedule-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.schedule-card .card-header h2 {
+  margin: 0;
+}
+
+.appointment-count {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.desktop-view {
+  display: block;
+}
+
+.mobile-view {
+  display: none;
+}
+
+.appointment-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.appointment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.appointment-date {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.appointment-time {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.appointment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 80px;
+  font-size: 14px;
+}
+
+.info-value {
+  color: var(--text);
+  font-size: 14px;
+  flex: 1;
+}
+
+/* Tablet View (768px - 1024px) */
+@media (max-width: 1024px) {
+  .therapist-container {
+    padding: 16px 12px;
+  }
+  
+  .therapist-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  #schedule-table {
+    font-size: 14px;
+  }
+  
+  #schedule-table th,
+  #schedule-table td {
+    padding: 10px 8px;
+  }
+}
+
+/* Mobile View (< 768px) */
+@media (max-width: 768px) {
+  .therapist-container {
+    padding: 12px 8px;
+  }
+  
+  .therapist-header {
+    margin-bottom: 24px;
+    padding: 0 8px;
+  }
+  
+  .therapist-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  
+  .welcome-text {
+    font-size: 1rem;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .card {
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .card-header {
+    padding: 16px;
+  }
+  
+  .card-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .filter-body {
+    padding: 16px;
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-controls .form-group {
+    max-width: 100%;
+  }
+  
+  .filter-controls .btn {
+    width: 100%;
+  }
+  
+  .schedule-card .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .desktop-view {
+    display: none;
+  }
+  
+  .mobile-view {
+    display: block;
+    padding: 16px;
+  }
+}
+
+/* Small Mobile View (< 480px) */
+@media (max-width: 480px) {
+  .therapist-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .welcome-text {
+    font-size: 0.95rem;
+  }
+  
+  .subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .appointment-card {
+    padding: 12px;
+  }
+  
+  .appointment-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .appointment-date {
+    font-size: 15px;
+  }
+  
+  .appointment-time {
+    font-size: 13px;
+  }
+  
+  .info-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .info-label {
+    min-width: unset;
+    font-size: 13px;
+  }
+  
+  .info-value {
+    font-size: 13px;
+    padding-left: 0;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .filter-card {
+    display: none;
+  }
+  
+  .mobile-view {
+    display: none;
+  }
+  
+  .desktop-view {
+    display: block;
+  }
+}
+</style>
+
+<script>
+async function api(path, method = 'GET', body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.status === 204 ? null : res.json();
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+let allAppointments = [];
+
+async function loadSchedule() {
+  const tbody = document.querySelector('#schedule-table tbody');
+  try {
+    allAppointments = await api('/therapist/appointments');
+    renderAppointments(allAppointments);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #e74c3c;">Error al cargar las citas</td></tr>';
+  }
+}
+
+function renderAppointments(appointments) {
+  const tbody = document.querySelector('#schedule-table tbody');
+  const mobileContainer = document.getElementById('mobile-appointments');
+  const countEl = document.getElementById('count');
+  
+  countEl.textContent = appointments.length;
+  
+  if (appointments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">No se encontraron citas</td></tr>';
+    mobileContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No se encontraron citas</div>';
+    return;
+  }
+  
+  // Desktop table view
+  tbody.innerHTML = appointments.map(a => `
+    <tr>
+      <td>${escapeHtml(a.date)}</td>
+      <td>${escapeHtml(a.time)}</td>
+      <td>${escapeHtml(a.durationMinutes || 45)} min</td>
+      <td>${escapeHtml(a.patientName || '')}</td>
+      <td>${escapeHtml(a.patientContact || '')}</td>
+    </tr>
+  `).join('');
+  
+  // Mobile card view
+  mobileContainer.innerHTML = appointments.map(a => `
+    <div class="appointment-card">
+      <div class="appointment-card-header">
+        <div class="appointment-date">📅 ${escapeHtml(a.date)}</div>
+        <div class="appointment-time">⏰ ${escapeHtml(a.time)}</div>
+      </div>
+      <div class="appointment-info">
+        <div class="info-row">
+          <div class="info-label">Duración:</div>
+          <div class="info-value">${escapeHtml(a.durationMinutes || 45)} minutos</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Paciente:</div>
+          <div class="info-value">${escapeHtml(a.patientName || 'Sin nombre')}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Contacto:</div>
+          <div class="info-value">${escapeHtml(a.patientContact || 'Sin contacto')}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadSchedule();
+  
+  // Date filter
+  document.getElementById('filter-date').addEventListener('change', (e) => {
+    const selectedDate = e.target.value;
+    if (selectedDate) {
+      const filtered = allAppointments.filter(a => a.date === selectedDate);
+      renderAppointments(filtered);
+    } else {
+      renderAppointments(allAppointments);
+    }
+  });
+  
+  // Clear filter
+  document.getElementById('clear-filter').addEventListener('click', () => {
+    document.getElementById('filter-date').value = '';
+    renderAppointments(allAppointments);
+  });
+});
+</script>
