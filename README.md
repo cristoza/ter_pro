@@ -1,283 +1,218 @@
-# 🏥 Physio Clinic Management System# Physiotherapy Clinic Appointment Management System
+# 🏥 Sistema de Gestión de Citas para Clínica de Fisioterapia
 
+Una aplicación web completa para administrar una clínica de fisioterapia, construida con Node.js, Express, PostgreSQL y plantillas EJS. Este proyecto sigue la arquitectura Modelo-Vista-Controlador (MVC).
 
+## ✨ Características Principales
 
-A comprehensive web application for managing a physical therapy clinic, built with Node.js, Express, PostgreSQL, and EJS templates.This project is a web application for managing appointments in a physiotherapy clinic. It is built using Node.js and follows the Model-View-Controller (MVC) architecture.
+### 👥 Control de Acceso Basado en Roles
+- **Admin**: Acceso total al sistema - gestiona terapeutas, pacientes, citas y disponibilidad.
+- **Doctor**: Crea citas y visualiza las citas recientes.
+- **Secretaria**: Ve y edita todas las agendas, exporta a CSV.
+- **Terapeuta**: Ve su agenda personal con interfaz adaptable a móviles.
 
+### 📅 Gestión Inteligente de Citas
+- **Programación Automática**: Búsqueda inteligente de espacios basada en la disponibilidad del terapeuta.
+- **Creación de Series**: Reserva 5 o 10 sesiones consecutivas automáticamente.
+- **Gestión de Pacientes**: Búsqueda y verificación de pacientes basada en cédula.
+- **Resaltado en Tiempo Real**: Las citas recién creadas se resaltan con una animación.
+- **Gestión de Disponibilidad**: Configura los horarios de los terapeutas por día y hora.
 
+### 🎨 UI/UX Moderna
+- Diseño limpio basado en tarjetas centrado en el usuario.
+- Esquema de colores azul cielo (#0ea5e9).
+- Diseño responsivo para móvil, tableta y escritorio.
+- Animaciones y transiciones suaves.
+- Interfaz en idioma español.
 
-## ✨ Features## Features
+### 🔒 Características de Seguridad
+- Hashing de contraseñas con Bcrypt.
+- Gestión de sesiones del lado del servidor (duración de 24 horas).
+- Límite de tasa en el inicio de sesión (5 intentos cada 15 minutos).
+- Protección de rutas basada en roles.
 
+## 🚀 Comenzando
 
+### Requisitos Previos
+- Node.js (v14 o superior)
+- PostgreSQL (v12 o superior)
+- npm o yarn
 
-### 👥 Role-Based Access Control- Create and list appointments
+### Instalación
 
-- **Admin**: Full system access - manage therapists, patients, appointments, and availability- User-friendly interface for managing appointments
-
-- **Doctor**: Create appointments and view recent appointments- Error handling middleware
-
-- **Secretary**: View and edit all schedules, export to CSV- Input validation for appointment data
-
-- **Therapist**: View personal schedule with responsive mobile interface
-
-## Project Structure
-
-### 📅 Smart Appointment Management
-
-- **Automatic Scheduling**: Intelligent slot finding based on therapist availability```
-
-- **Series Creation**: Book 5 or 10 consecutive sessions automaticallyphysio-clinic-app
-
-- **Patient Management**: Cedula-based patient lookup and verification├── src
-
-- **Real-time Highlighting**: Newly created appointments highlight with animation│   ├── app.js                  # Entry point of the application
-
-- **Availability Management**: Configure therapist schedules by day and time│   ├── controllers             # Contains controllers for handling requests
-
-│   ├── models                  # Contains data models
-
-### 🎨 Modern UI/UX│   ├── routes                  # Defines application routes
-
-- Clean, centered card-based design│   ├── services                # Contains business logic
-
-- Sky blue color scheme (#0ea5e9)│   ├── middlewares             # Middleware functions
-
-- Responsive design for mobile, tablet, and desktop│   ├── config                  # Configuration files
-
-- Smooth animations and transitions│   ├── views                   # EJS templates for rendering views
-
-- Spanish language interface│   ├── public                  # Static files (CSS, JS)
-
-│   └── utils                   # Utility functions
-
-### 🔒 Security Features├── tests                       # Unit tests for the application
-
-- Bcrypt password hashing├── .env.example                # Example environment variables
-
-- Server-side session management (24-hour duration)├── .gitignore                  # Files to ignore in Git
-
-- Rate limiting on login (5 attempts per 15 minutes)├── package.json                # Project metadata and dependencies
-
-- Role-based route protection└── README.md                   # Project documentation
-
-```
-
-## 🚀 Getting Started
-
-## Installation
-
-### Prerequisites
-
-- Node.js (v14 or higher)1. Clone the repository:
-
-- PostgreSQL (v12 or higher)   ```
-
-- npm or yarn   git clone <repository-url>
-
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/cristoza/Haiam_pro.git
    cd physio-clinic-app
+   ```
 
-### Installation   ```
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
 
+3. **Configurar variables de entorno**
+   Crea un archivo `.env` en el directorio raíz copiando `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Actualiza los valores en `.env`:
+   ```env
+   # Configuración de Base de Datos
+   DB_NAME=Fisiatria_BD
+   DB_USER=postgres
+   DB_PASSWORD=tu_contraseña
+   DB_HOST=localhost
+   DB_PORT=5432
 
+   # Configuración del Servidor
+   PORT=3000
+   NODE_ENV=development
 
-1. **Clone the repository**2. Install dependencies:
+   # Secreto de Sesión (¡cambiar en producción!)
+   SESSION_SECRET=tu-clave-secreta-cambiar-en-produccion
+   ```
 
-```bash   ```
+4. **Configurar la base de datos**
+   ```bash
+   # Las secuencias de comandos crean la DB si no existe
+   
+   # Ejecutar scripts de configuración
+   node scripts/create-db.js
+   node scripts/seed-db.js
+   node scripts/seed-users.js
+   ```
 
-git clone https://github.com/yourusername/physio-clinic-app.git   npm install
+5. **Iniciar la aplicación**
+   ```bash
+   npm start
+   ```
 
-cd physio-clinic-app   ```
+   La aplicación estará disponible en `http://localhost:3000`
 
-```
+## 👤 Cuentas de Usuario Predeterminadas
 
-3. Set up environment variables by copying `.env.example` to `.env` and updating the values as needed.
-
-2. **Install dependencies**
-
-```bash## Usage
-
-npm install
-
-```To start the application, run:
-
-```
-
-3. **Set up environment variables**npm start
-
-```
-
-Create a `.env` file in the root directory:
-
-```envVisit `http://localhost:3000` in your browser to access the application.
-
-# Database Configuration
-
-DB_NAME=physio_clinic## Testing
-
-DB_USER=postgres
-
-DB_PASSWORD=your_passwordTo run the tests, use:
-
-DB_HOST=localhost```
-
-DB_PORT=5432npm test
-
-```
-
-# Server Configuration
-
-PORT=3000## Contributing
-
-NODE_ENV=development
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
-# Session Secret (change in production!)
-
-SESSION_SECRET=your-secret-key-change-in-production## License
-
-```
-
-This project is licensed under the MIT License.
-4. **Set up the database**
-```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE physio_clinic;"
-
-# Run setup scripts
-node scripts/create-db.js
-node scripts/seed-db.js
-node scripts/seed-users.js
-```
-
-5. **Start the application**
-```bash
-npm start
-```
-
-Application available at `http://localhost:3000`
-
-## 👤 Default User Accounts
-
-| Role | Username | Password |
+| Rol | Usuario | Contraseña |
 |------|----------|----------|
 | Admin | admin | admin123 |
 | Doctor | doctor | doctor123 |
-| Secretary | secretary | secretary123 |
-| Therapist | ana.morales | therapist123 |
+| Secretaria | secretary | secretary123 |
+| Terapeuta | ana.morales | therapist123 |
 
-⚠️ **Change passwords in production!**
+⚠️ **¡Cambia las contraseñas en producción!**
 
-## 📁 Project Structure
+## 📁 Estructura del Proyecto
 
 ```
 physio-clinic-app/
 ├── src/
-│   ├── app.js                 # Main application
-│   ├── config/db.js          # Database config
-│   ├── controllers/          # Request handlers
-│   ├── middlewares/          # Auth, validation, rate limiting
-│   ├── models/              # Sequelize models
-│   ├── routes/              # Express routes
-│   ├── services/            # Business logic
-│   ├── views/               # EJS templates
-│   └── public/              # Static files
-├── scripts/                 # DB setup scripts
-└── tests/                   # Tests
+│   ├── app.js                 # Aplicación principal
+│   ├── config/db.js          # Configuración de base de datos
+│   ├── controllers/          # Controladores de peticiones
+│   ├── middlewares/          # Auth, validación, rate limiting
+│   ├── models/              # Modelos Sequelize
+│   ├── routes/              # Rutas Express
+│   ├── services/            # Lógica de negocio
+│   ├── views/               # Plantillas EJS
+│   ├── public/              # Archivos estáticos (CSS, JS)
+│   └── utils/               # Funciones de utilidad
+├── scripts/                 # Scripts de configuración de BD
+├── tests/                   # Tests unitarios
+└── client/                  # Frontend en React (Nuevo)
 ```
 
-## 🛠️ Technologies
+## 🛠️ Tecnologías
 
 - **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL with Sequelize ORM
-- **Templates**: EJS
+- **Base de Datos**: PostgreSQL con Sequelize ORM
+- **Plantillas**: EJS (Legacy), React (Nuevo)
 - **Auth**: bcrypt, express-session
-- **Security**: Helmet.js, express-rate-limit
-- **Styling**: Custom CSS
+- **Seguridad**: Helmet.js, express-rate-limit
+- **Estilos**: CSS Personalizado
 
-## 📱 Responsive Design
+## 📱 Diseño Responsivo
 
-- **Desktop** (>1024px): Full features
-- **Tablet** (768px-1024px): Touch-optimized
-- **Mobile** (<768px): Card-based layout
+- **Escritorio** (>1024px): Funcionalidades completas
+- **Tableta** (768px-1024px): Optimizado para táctil
+- **Móvil** (<768px): Diseño basado en tarjetas
 
-## 🔧 API Endpoints
+## 🔧 Endpoints de API
 
-### Authentication
-- `POST /login` - Login
-- `POST /logout` - Logout
+### Autenticación
+- `POST /login` - Iniciar sesión
+- `POST /logout` - Cerrar sesión
 
-### Appointments
-- `GET /api/appointments` - List
-- `POST /api/appointments` - Create single
-- `POST /api/appointments/series` - Create series (5/10 sessions)
-- `PUT /api/appointments/:id` - Update
-- `DELETE /api/appointments/:id` - Delete
+### Citas
+- `GET /api/appointments` - Listar
+- `POST /api/appointments` - Crear una
+- `POST /api/appointments/series` - Crear serie (5/10 sesiones)
+- `PUT /api/appointments/:id` - Actualizar
+- `DELETE /api/appointments/:id` - Eliminar
 
-### Patients
-- `GET /patients` - List
-- `GET /patients/cedula/:cedula` - Find by cedula
-- `POST /patients` - Create
-- `PUT /patients/:id` - Update
-- `DELETE /patients/:id` - Delete
+### Pacientes
+- `GET /patients` - Listar
+- `GET /patients/cedula/:cedula` - Buscar por cédula
+- `POST /patients` - Crear
+- `PUT /patients/:id` - Actualizar
+- `DELETE /patients/:id` - Eliminar
 
-### Therapists
-- `GET /therapists` - List
-- `POST /therapists` - Create
-- `PUT /therapists/:id` - Update
-- `DELETE /therapists/:id` - Delete
+### Terapeutas
+- `GET /therapists` - Listar
+- `POST /therapists` - Crear
+- `PUT /therapists/:id` - Actualizar
+- `DELETE /therapists/:id` - Eliminar
 
-### Availability
-- `GET /availability` - List slots
-- `POST /availability` - Create slot
-- `DELETE /availability/:id` - Delete slot
+### Disponibilidad
+- `GET /availability` - Listar espacios
+- `POST /availability` - Crear espacio
+- `DELETE /availability/:id` - Eliminar espacio
 
-## 🎯 Key Features
+## 🎯 Funcionalidades Clave
 
-### Smart Scheduling
-Automatically finds available time slots based on:
-- Therapist availability schedules
-- Existing appointment conflicts
-- Business day constraints (Mon-Fri)
-- Time windows (8:00 AM - 6:00 PM)
+### Programación Inteligente
+Encuentra automáticamente espacios disponibles basados en:
+- Horarios de disponibilidad del terapeuta
+- Conflictos con citas existentes
+- Restricciones de días laborales (Lun-Vie)
+- Ventanas de tiempo (8:00 AM - 6:00 PM)
 
-### Series Appointments
-- Schedules consecutive business days
-- Finds therapist available for all dates
-- All-or-nothing transactions
+### Citas en Serie
+- Programa días laborales consecutivos
+- Encuentra terapeuta disponible para todas las fechas
+- Transacciones todo o nada
 
-### Recent Appointments
-- Shows 10 most recent (doctor view)
-- Sorted by creation order
-- 3-second highlight animation for new appointments
+### Citas Recientes
+- Muestra las 10 más recientes (vista de doctor)
+- Ordenadas por orden de creación
+- Animación de resaltado de 3 segundos para nuevas citas
 
-## 🔐 Security for Production
+## 🔐 Seguridad para Producción
 
-1. Change `SESSION_SECRET` to strong random value
-2. Enable HTTPS (`cookie.secure: true`)
-3. Update default passwords
-4. Configure CORS properly
-5. Set up database backups
-6. Enable logging/monitoring
+1. Cambiar `SESSION_SECRET` a un valor aleatorio fuerte
+2. Habilitar HTTPS (`cookie.secure: true`)
+3. Actualizar contraseñas predeterminadas
+4. Configurar CORS adecuadamente
+5. Configurar copias de seguridad de la base de datos
+6. Habilitar registro/monitoreo
 
 ## 📝 Scripts
 
 ```bash
-npm start              # Start server
-npm test               # Run tests
-node scripts/create-db.js    # Init database
-node scripts/seed-db.js      # Seed sample data
-node scripts/seed-users.js   # Create users
+npm start              # Iniciar servidor
+npm test               # Ejecutar pruebas
+node scripts/create-db.js    # Iniciar base de datos
+node scripts/seed-db.js      # Sembrar datos de muestra
+node scripts/seed-users.js   # Crear usuarios
 ```
 
-## 📄 License
+## 📄 Licencia
 
-MIT License
+Licencia MIT
 
-## 📧 Support
+## 📧 Soporte
 
-Open an issue on GitHub for support.
+Abre un issue en GitHub para soporte.
 
 ---
 
-**Note**: Designed for internal clinic use. Ensure proper security measures before production deployment.
+**Nota**: Diseñado para uso interno de clínica. Asegúrate de tener las medidas de seguridad adecuadas antes del despliegue en producción.
