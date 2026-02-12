@@ -1,8 +1,8 @@
-# 🏥 Sistema de Gestión de Citas para Clínica de Fisioterapia
+#  Sistema de Gestión de Citas para Clínica de Fisioterapia
 
 Una aplicación web completa para administrar una clínica de fisioterapia, construida con Node.js, Express, PostgreSQL y plantillas EJS. Este proyecto sigue la arquitectura Modelo-Vista-Controlador (MVC).
 
-## ✨ Características Principales
+##  Características Principales
 
 ### 👥 Control de Acceso Basado en Roles
 - **Admin**: Acceso total al sistema - gestiona terapeutas, pacientes, citas y disponibilidad.
@@ -17,20 +17,20 @@ Una aplicación web completa para administrar una clínica de fisioterapia, cons
 - **Resaltado en Tiempo Real**: Las citas recién creadas se resaltan con una animación.
 - **Gestión de Disponibilidad**: Configura los horarios de los terapeutas por día y hora.
 
-### 🎨 UI/UX Moderna
+###  UI/UX Moderna
 - Diseño limpio basado en tarjetas centrado en el usuario.
 - Esquema de colores azul cielo (#0ea5e9).
 - Diseño responsivo para móvil, tableta y escritorio.
 - Animaciones y transiciones suaves.
 - Interfaz en idioma español.
 
-### 🔒 Características de Seguridad
+###  Características de Seguridad
 - Hashing de contraseñas con Bcrypt.
 - Gestión de sesiones del lado del servidor (duración de 24 horas).
 - Límite de tasa en el inicio de sesión (5 intentos cada 15 minutos).
 - Protección de rutas basada en roles.
 
-## 🚀 Comenzando
+##  Comenzando
 
 ### Requisitos Previos
 - Node.js (v14 o superior)
@@ -90,7 +90,7 @@ Una aplicación web completa para administrar una clínica de fisioterapia, cons
 
    La aplicación estará disponible en `http://localhost:3000`
 
-## 👤 Cuentas de Usuario Predeterminadas
+##  Cuentas de Usuario Predeterminadas
 
 | Rol | Usuario | Contraseña |
 |------|----------|----------|
@@ -99,9 +99,9 @@ Una aplicación web completa para administrar una clínica de fisioterapia, cons
 | Secretaria | secretary | secretary123 |
 | Terapeuta | ana.morales | therapist123 |
 
-⚠️ **¡Cambia las contraseñas en producción!**
+ **¡Cambia las contraseñas en producción!**
 
-## 📁 Estructura del Proyecto
+##  Estructura del Proyecto
 
 ```
 physio-clinic-app/
@@ -121,7 +121,7 @@ physio-clinic-app/
 └── client/                  # Frontend en React (Nuevo)
 ```
 
-## 🛠️ Tecnologías
+##  Tecnologías
 
 - **Backend**: Node.js, Express.js
 - **Base de Datos**: PostgreSQL con Sequelize ORM
@@ -130,13 +130,13 @@ physio-clinic-app/
 - **Seguridad**: Helmet.js, express-rate-limit
 - **Estilos**: CSS Personalizado
 
-## 📱 Diseño Responsivo
+##  Diseño Responsivo
 
 - **Escritorio** (>1024px): Funcionalidades completas
 - **Tableta** (768px-1024px): Optimizado para táctil
 - **Móvil** (<768px): Diseño basado en tarjetas
 
-## 🔧 Endpoints de API
+##  Endpoints de API
 
 ### Autenticación
 - `POST /login` - Iniciar sesión
@@ -167,7 +167,7 @@ physio-clinic-app/
 - `POST /availability` - Crear espacio
 - `DELETE /availability/:id` - Eliminar espacio
 
-## 🎯 Funcionalidades Clave
+##  Funcionalidades Clave
 
 ### Programación Inteligente
 Encuentra automáticamente espacios disponibles basados en:
@@ -186,7 +186,7 @@ Encuentra automáticamente espacios disponibles basados en:
 - Ordenadas por orden de creación
 - Animación de resaltado de 3 segundos para nuevas citas
 
-## 🔐 Seguridad para Producción
+##  Seguridad para Producción
 
 1. Cambiar `SESSION_SECRET` a un valor aleatorio fuerte
 2. Habilitar HTTPS (`cookie.secure: true`)
@@ -195,7 +195,7 @@ Encuentra automáticamente espacios disponibles basados en:
 5. Configurar copias de seguridad de la base de datos
 6. Habilitar registro/monitoreo
 
-## 📝 Scripts
+##  Scripts
 
 ```bash
 npm start              # Iniciar servidor
@@ -205,11 +205,11 @@ node scripts/seed-db.js      # Sembrar datos de muestra
 node scripts/seed-users.js   # Crear usuarios
 ```
 
-## 📄 Licencia
+##  Licencia
 
 Licencia MIT
 
-## 📧 Soporte
+##  Soporte
 
 Abre un issue en GitHub para soporte.
 
