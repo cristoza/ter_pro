@@ -4,13 +4,13 @@ Una aplicación web completa para administrar una clínica de fisioterapia, cons
 
 ##  Características Principales
 
-### 👥 Control de Acceso Basado en Roles
+###  Control de Acceso Basado en Roles
 - **Admin**: Acceso total al sistema - gestiona terapeutas, pacientes, citas y disponibilidad.
 - **Doctor**: Crea citas y visualiza las citas recientes.
 - **Secretaria**: Ve y edita todas las agendas, exporta a CSV.
 - **Terapeuta**: Ve su agenda personal con interfaz adaptable a móviles.
 
-### 📅 Gestión Inteligente de Citas
+###  Gestión Inteligente de Citas
 - **Programación Automática**: Búsqueda inteligente de espacios basada en la disponibilidad del terapeuta.
 - **Creación de Series**: Reserva 5 o 10 sesiones consecutivas automáticamente.
 - **Gestión de Pacientes**: Búsqueda y verificación de pacientes basada en cédula.
