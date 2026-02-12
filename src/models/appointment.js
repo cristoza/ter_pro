@@ -30,6 +30,31 @@ const Appointment = sequelize.define('Appointment', {
         allowNull: false,
         defaultValue: 45,
     },
+    status: {
+        type: DataTypes.STRING,
+        defaultValue: 'scheduled', // scheduled, completed, cancelled, no_show
+        allowNull: true
+    },
+    notes: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    creationDate: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+    },
+    batchId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+    },
+    machineId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'Machines',
+            key: 'id',
+        }
+    },
     // optional FK to patient record
     patientId: {
         type: DataTypes.INTEGER,
@@ -48,6 +73,16 @@ const Appointment = sequelize.define('Appointment', {
         allowNull: true,
         references: {
             model: 'Therapists',
+            key: 'id',
+        },
+        onDelete: 'SET NULL',
+        onUpdate: 'CASCADE',
+    },
+    machineId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'Machines',
             key: 'id',
         },
         onDelete: 'SET NULL',

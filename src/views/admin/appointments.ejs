@@ -3,7 +3,7 @@
 <div style="max-width: 1100px; margin: 0 auto;">
   <!-- Header -->
   <div style="text-align: center; margin-bottom: 32px;">
-    <h1>📅 Citas</h1>
+    <h1>Citas</h1>
     <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Programa y gestiona las citas de pacientes</p>
     <div style="display: flex; gap: 12px; justify-content: center;">
       <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
@@ -13,7 +13,7 @@
   <!-- Create Appointment Form -->
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>➕ Crear Cita</h2>
+      <h2>Crear Cita</h2>
     </div>
     
     <form id="appointment-form">
@@ -35,7 +35,7 @@
           <label>Cédula</label>
           <div style="display: flex; gap: 12px;">
             <input type="text" name="patientCedula" placeholder="Ingrese cédula de 10 dígitos" style="flex: 1;" />
-            <button type="button" class="btn btn-secondary check-patient" style="white-space: nowrap;">🔍 Verificar</button>
+            <button type="button" class="btn btn-secondary check-patient" style="white-space: nowrap;">Verificar</button>
           </div>
           <div class="cedula-result" aria-live="polite" style="margin-top: 8px; font-size: 14px;"></div>
         </div>
@@ -71,7 +71,7 @@
 
       <div style="text-align: center; margin-top: 24px;">
         <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">
-          ✓ Crear Cita
+          Crear Cita
         </button>
       </div>
     </form>
@@ -80,18 +80,19 @@
   <!-- Existing Appointments Table -->
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>📋 Citas Existentes</h2>
+      <h2>Citas Existentes</h2>
     </div>
     <div class="table-responsive">
       <table id="appointments-table">
         <thead>
           <tr>
             <th>ID</th>
+            <th>Creada</th>
             <th>Fecha</th>
             <th>Hora</th>
             <th>Paciente</th>
             <th>Contacto</th>
-            <th>Terapeuta</th>
+            <th>Terapista</th>
             <th>Acciones</th>
           </tr>
         </thead>

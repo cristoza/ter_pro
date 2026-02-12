@@ -2,21 +2,21 @@
 
 <div style="max-width: 1100px; margin: 0 auto;">
   <div style="text-align: center; margin-bottom: 32px;">
-    <h1>🕐 Disponibilidad</h1>
-    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Configura los horarios de disponibilidad de terapeutas</p>
+    <h1>Disponibilidad</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Configura los horarios de disponibilidad de terapistas</p>
     <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
   </div>
 
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>➕ Crear Disponibilidad</h2>
+      <h2>Crear Disponibilidad</h2>
     </div>
     <form id="availability-form">
       <div class="form-row">
         <div class="form-group">
-          <label>Terapeuta</label>
+          <label>Terapista</label>
           <select name="therapistId" id="avail-therapist" required>
-            <option value="">Seleccione un terapeuta</option>
+            <option value="">Seleccione un terapista</option>
           </select>
         </div>
         <div class="form-group">
@@ -43,18 +43,18 @@
         </div>
       </div>
       <div style="text-align: center; margin-top: 24px;">
-        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">✓ Guardar Disponibilidad</button>
+        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">Guardar Disponibilidad</button>
       </div>
     </form>
   </div>
 
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>📋 Disponibilidad Existente</h2>
+      <h2>Disponibilidad Existente</h2>
     </div>
     <div class="table-responsive">
       <table id="availability-table">
-        <thead><tr><th>ID</th><th>Terapeuta</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Terapista</th><th>Día</th><th>Inicio</th><th>Fin</th><th>Acciones</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>

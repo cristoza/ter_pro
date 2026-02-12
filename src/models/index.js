@@ -4,6 +4,7 @@ const Therapist = require('./therapist');
 const Patient = require('./patient');
 const TherapistAvailability = require('./therapistAvailability');
 const User = require('./user');
+const Machine = require('./machine');
 
 // Define associations
 Appointment.belongsTo(Therapist, { foreignKey: 'therapistId', as: 'therapist' });
@@ -11,6 +12,9 @@ Therapist.hasMany(Appointment, { foreignKey: 'therapistId', as: 'appointments' }
 
 Appointment.belongsTo(Patient, { foreignKey: 'patientId', as: 'patient' });
 Patient.hasMany(Appointment, { foreignKey: 'patientId', as: 'appointments' });
+
+Appointment.belongsTo(Machine, { foreignKey: 'machineId', as: 'machine' });
+Machine.hasMany(Appointment, { foreignKey: 'machineId', as: 'appointments' });
 
 TherapistAvailability.belongsTo(Therapist, { foreignKey: 'therapistId', as: 'therapist' });
 Therapist.hasMany(TherapistAvailability, { foreignKey: 'therapistId', as: 'availability' });
@@ -24,4 +28,5 @@ module.exports = {
 	Patient,
 	TherapistAvailability,
 	User,
+    Machine
 };

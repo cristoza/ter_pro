@@ -7,18 +7,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Clínica de Fisiatría - Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <title>Hospital del Adulto Mayor - Portal</title>
 </head>
 <body>
     <header class="site-header">
         <div class="header-inner">
             <div class="brand">
-                <a href="#" class="logo" style="cursor: default;">🏥 Fisiatría</a>
+                <a href="#" class="logo" style="cursor: default;">Hospital del Adulto Mayor</a>
                 <span class="tag">Portal de Salud</span>
             </div>
             <div class="header-actions">
                 <form method="POST" action="/logout" style="margin: 0;">
-                    <button type="submit" class="btn btn-danger btn-sm">🚪 Cerrar Sesión</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Cerrar Sesión</button>
                 </form>
             </div>
         </div>
@@ -29,7 +30,7 @@
     </main>
 
     <footer class="site-footer">
-        <p>© <%= new Date().getFullYear() %> Clínica de Fisiatría — Gestión Profesional de Salud</p>
+        <p>© <%= new Date().getFullYear() %> Hospital del Adulto Mayor — Sistema de gestión de citas</p>
     </footer>
 
     <script src="/js/main.js"></script>

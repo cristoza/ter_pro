@@ -8,6 +8,10 @@
     "test": "jest"
   },
   "dependencies": {
+    "@nivo/bar": "^0.99.0",
+    "@nivo/core": "^0.99.0",
+    "@nivo/line": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.6",
@@ -16,6 +20,7 @@
     "express-session": "^1.18.2",
     "fisitriabienporfa": "file:..",
     "helmet": "^8.1.0",
+    "pdfkit": "^0.17.2",
     "pg": "^8.11.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.32.1"

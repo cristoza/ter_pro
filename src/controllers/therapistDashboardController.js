@@ -1,4 +1,4 @@
-const { Appointment, Therapist } = require('../models');
+const { Appointment, Therapist, Patient, Machine } = require('../models');
 
 module.exports = {
     // Show therapist dashboard
@@ -32,6 +32,10 @@ module.exports = {
             
             const appointments = await Appointment.findAll({
                 where: { therapistId },
+                include: [
+                    { model: Patient, as: 'patient' },
+                    { model: Machine, as: 'machine' }
+                ],
                 order: [['date', 'ASC'], ['time', 'ASC']]
             });
             
@@ -41,4 +45,36 @@ module.exports = {
             res.status(500).json({ message: 'Error fetching appointments' });
         }
     },
+    // Update appointment status/notes
+    async updateAppointment(req, res) {
+        try {
+            const therapistId = req.session.therapistId;
+            const appointmentId = req.params.id;
+            const { status, notes } = req.body;
+
+            if (!therapistId) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+
+            const appointment = await Appointment.findByPk(appointmentId);
+            if (!appointment) {
+                return res.status(404).json({ message: 'Appointment not found' });
+            }
+
+            // Verify this appointment belongs to the therapist
+            if (appointment.therapistId !== parseInt(therapistId)) {
+                return res.status(403).json({ message: 'You can only update your own appointments' });
+            }
+
+            // Update allowed fields
+            if (status) appointment.status = status;
+            if (notes !== undefined) appointment.notes = notes;
+            
+            await appointment.save();
+            res.json(appointment);
+        } catch (error) {
+            console.error('Error updating appointment:', error);
+            res.status(500).json({ message: 'Error updating appointment' });
+        }
+    }
 };

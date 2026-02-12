@@ -1,0 +1,217 @@
+<%- include('../layout-simple') %>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1>Búsqueda de Pacientes</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Buscar información de pacientes registrados</p>
+    <a href="/secretary" class="btn btn-secondary">← Volver al Panel</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Buscar Paciente</h2>
+    </div>
+    <div style="padding: 20px;">
+      <div class="form-group">
+        <input type="text" id="patient-search" class="form-control" placeholder="Buscar por nombre o cédula..." style="width: 100%; padding: 12px; font-size: 16px;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2>Resultados</h2>
+    </div>
+    <div class="table-responsive">
+      <table id="patients-table" class="table">
+        <thead>
+          <tr>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Fecha Nac.</th>
+            <th>Contacto</th>
+            <th>Notas</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="patients-list">
+          <!-- Results will be populated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div id="history-modal" class="modal">
+  <div class="modal-dialog" style="max-width: 600px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Historial de Citas</h3>
+        <button type="button" class="close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Seleccione un grupo de citas para descargar el PDF:</p>
+        <div id="batches-list" class="list-group">
+          <!-- Batches will be loaded here -->
+        </div>
+        <hr>
+        <div style="text-align: center;">
+            <a id="download-all-btn" href="#" class="btn btn-secondary" target="_blank">Descargar Todas las Próximas Citas</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.list-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.list-group-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+}
+.list-group-item:hover {
+    background: #f0f0f0;
+}
+.batch-info {
+    display: flex;
+    flex-direction: column;
+}
+.batch-date {
+    font-weight: bold;
+    color: #333;
+}
+.batch-details {
+    font-size: 0.9em;
+    color: #666;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('patient-search');
+    const tableBody = document.getElementById('patients-list');
+    const modal = document.getElementById('history-modal');
+    const list = document.getElementById('batches-list');
+    const downloadAllBtn = document.getElementById('download-all-btn');
+    const closeBtn = modal.querySelector('.close');
+    let allPatients = [];
+
+    // Modal functions
+    function closeModal() {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+    function openHistoryModal(publicId) {
+        console.log('Opening history modal for:', publicId);
+        
+        modal.classList.add('show');
+        modal.style.display = ''; 
+        
+        list.innerHTML = '<p style="text-align:center;">Cargando...</p>';
+        downloadAllBtn.href = `/portal/patient/${publicId}/pdf`;
+
+        fetch(`/secretary/patients/${publicId}/batches`)
+            .then(res => res.json())
+            .then(batches => {
+                if (batches.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color: #666;">No hay grupos de citas registrados.</p>';
+                    return;
+                }
+
+                list.innerHTML = batches.map(b => `
+                    <div class="list-group-item">
+                        <div class="batch-info">
+                            <span class="batch-date">Creado el: ${b.created ? new Date(b.created).toLocaleDateString() : 'N/A'}</span>
+                            <span class="batch-details">
+                                ${b.count} citas (${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate).toLocaleDateString()})
+                            </span>
+                        </div>
+                        <a href="/portal/patient/${publicId}/pdf?batchId=${b.batchId}" class="btn btn-sm btn-primary" target="_blank">
+                            📄 Descargar PDF
+                        </a>
+                    </div>
+                `).join('');
+            })
+            .catch(err => {
+                console.error(err);
+                list.innerHTML = '<p style="text-align:center; color: red;">Error al cargar historial.</p>';
+            });
+    }
+
+    // Load all patients initially
+    loadPatients();
+
+    async function loadPatients() {
+        try {
+            const response = await fetch('/patients');
+            if (!response.ok) throw new Error('Error loading patients');
+            allPatients = await response.json();
+            renderPatients(allPatients);
+        } catch (error) {
+            console.error('Error:', error);
+            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error al cargar pacientes</td></tr>';
+        }
+    }
+
+    function renderPatients(patients) {
+        if (patients.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No se encontraron pacientes</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = patients.map(p => `
+            <tr>
+                <td>${p.cedula || '-'}</td>
+                <td>${p.name}</td>
+                <td>${p.dob ? new Date(p.dob).toLocaleDateString() : '-'}</td>
+                <td>${p.contact || '-'}</td>
+                <td>${p.notes || '-'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-info history-btn" data-public-id="${p.publicId}" title="Ver historial de citas">
+                        📋 Historial
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Attach event listeners to new buttons
+        document.querySelectorAll('.history-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const publicId = this.getAttribute('data-public-id');
+                openHistoryModal(publicId);
+            });
+        });
+    }
+
+    // Filter patients on search
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const filtered = allPatients.filter(p => 
+            (p.name && p.name.toLowerCase().includes(term)) || 
+            (p.cedula && p.cedula.includes(term))
+        );
+        renderPatients(filtered);
+    });
+});
+</script>

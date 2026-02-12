@@ -48,6 +48,25 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username, password, role, therapistId } = req.body;
+
+    await userService.updateUser(userId, {
+      username,
+      password,
+      role,
+      therapistId: therapistId || null
+    });
+
+    res.redirect('/admin/users?success=' + encodeURIComponent('User updated successfully'));
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.redirect('/admin/users?error=' + encodeURIComponent(error.message || 'Error updating user'));
+  }
+};
+
 exports.deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;

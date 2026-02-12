@@ -60,13 +60,13 @@
                                 <option value="admin">Admin</option>
                                 <option value="doctor">Doctor</option>
                                 <option value="secretary">Secretaria</option>
-                                <option value="therapist">Terapeuta</option>
+                                <option value="therapist">Terapista</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="therapistId">Terapeuta (si rol = terapeuta)</label>
+                            <label for="therapistId">Terapista (si rol = terapista)</label>
                             <select class="form-control" id="therapistId" name="therapistId">
                                 <option value="">Ninguno</option>
                                 <% therapists.forEach(therapist => { %>
@@ -76,7 +76,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Crear Usuario</button>
+                <button type="submit" class="btn btn-success">Crear Usuario</button>
             </form>
         </div>
     </div>
@@ -94,7 +94,7 @@
                             <th>ID</th>
                             <th>Usuario</th>
                             <th>Rol</th>
-                            <th>Terapeuta Vinculado</th>
+                            <th>Terapista Vinculado</th>
                             <th>Creado</th>
                             <th>Acciones</th>
                         </tr>
@@ -124,14 +124,16 @@
                                     </td>
                                     <td><%= new Date(user.createdAt).toLocaleDateString() %></td>
                                     <td>
-                                        <!-- Password Update Button -->
+                                        <!-- Edit User Button -->
                                         <button 
                                             type="button" 
-                                            class="btn btn-sm btn-warning" 
-                                            data-toggle="modal" 
-                                            data-target="#passwordModal<%= user.id %>"
+                                            class="btn btn-sm btn-primary edit-user-btn" 
+                                            data-user-id="<%= user.id %>"
+                                            data-username="<%= user.username %>"
+                                            data-role="<%= user.role %>"
+                                            data-therapist-id="<%= user.therapistId || '' %>"
                                         >
-                                            Cambiar Contraseña
+                                            Editar
                                         </button>
                                         
                                         <!-- Delete Button (disabled for admin user) -->
@@ -150,40 +152,6 @@
                                                 Eliminar
                                             </button>
                                         <% } %>
-
-                                        <!-- Password Modal -->
-                                        <div class="modal fade" id="passwordModal<%= user.id %>" tabindex="-1" role="dialog">
-                                            <div class="modal-dialog" role="document">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Cambiar Contraseña para <%= user.username %></h5>
-                                                        <button type="button" class="close" data-dismiss="modal">
-                                                            <span>&times;</span>
-                                                        </button>
-                                                    </div>
-                                                    <form method="POST" action="/admin/users/<%= user.id %>/password">
-                                                        <div class="modal-body">
-                                                            <div class="form-group">
-                                                                <label for="newPassword<%= user.id %>">Nueva Contraseña</label>
-                                                                <input 
-                                                                    type="password" 
-                                                                    class="form-control" 
-                                                                    id="newPassword<%= user.id %>" 
-                                                                    name="newPassword" 
-                                                                    required
-                                                                    minlength="6"
-                                                                >
-                                                                <small class="form-text text-muted">Mínimo 6 caracteres</small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                                                            <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             <% }); %>
@@ -195,6 +163,72 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Usuario: <span id="modalUsernameDisplay"></span></h5>
+                <button type="button" class="close modal-close-btn">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="editUserForm" method="POST" action="">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editUsername">Usuario *</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="editUsername" 
+                            name="username" 
+                            required
+                            pattern="[a-zA-Z0-9._-]+"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editRole">Rol *</label>
+                        <select class="form-control" id="editRole" name="role" required>
+                            <option value="admin">Admin</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="secretary">Secretaria</option>
+                            <option value="therapist">Terapista</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="editTherapistGroup" style="display: none;">
+                        <label for="editTherapistId">Terapista</label>
+                        <select class="form-control" id="editTherapistId" name="therapistId">
+                            <option value="">Ninguno</option>
+                            <% therapists.forEach(therapist => { %>
+                                <option value="<%= therapist.id %>"><%= therapist.name %></option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editPassword">Nueva Contraseña (Opcional)</label>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="editPassword" 
+                            name="password" 
+                            minlength="6"
+                            placeholder="Dejar en blanco para mantener la actual"
+                        >
+                        <small class="form-text text-muted">Mínimo 6 caracteres si se cambia</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -312,27 +346,54 @@
 </style>
 
 <script>
-    // Simple modal functionality
+    function openEditModal(userId, username, role, therapistId) {
+        const modal = document.getElementById('editUserModal');
+        const form = document.getElementById('editUserForm');
+        
+        // Set form action
+        form.action = `/admin/users/${userId}/update`;
+        
+        // Populate fields
+        document.getElementById('modalUsernameDisplay').textContent = username;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editRole').value = role;
+        document.getElementById('editTherapistId').value = therapistId || '';
+        document.getElementById('editPassword').value = ''; // Clear password field
+
+        // Handle therapist field visibility
+        const therapistGroup = document.getElementById('editTherapistGroup');
+        if (role === 'therapist') {
+            therapistGroup.style.display = 'block';
+            document.getElementById('editTherapistId').required = true;
+        } else {
+            therapistGroup.style.display = 'none';
+            document.getElementById('editTherapistId').required = false;
+        }
+
+        modal.classList.add('show');
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('editUserModal');
+        modal.classList.remove('show');
+        document.getElementById('editUserForm').reset();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Open modals
-        document.querySelectorAll('[data-toggle="modal"]').forEach(button => {
-            button.addEventListener('click', function() {
-                const targetId = this.getAttribute('data-target');
-                const modal = document.querySelector(targetId);
-                if (modal) {
-                    modal.classList.add('show');
-                }
+        // Attach click handlers to edit buttons
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                const username = this.getAttribute('data-username');
+                const role = this.getAttribute('data-role');
+                const therapistId = this.getAttribute('data-therapist-id');
+                openEditModal(userId, username, role, therapistId);
             });
         });
 
-        // Close modals
-        document.querySelectorAll('[data-dismiss="modal"]').forEach(button => {
-            button.addEventListener('click', function() {
-                const modal = this.closest('.modal');
-                if (modal) {
-                    modal.classList.remove('show');
-                }
-            });
+        // Attach click handlers to close buttons
+        document.querySelectorAll('.modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', closeEditModal);
         });
 
         // Close modal on background click
@@ -344,24 +405,43 @@
             });
         });
 
-        // Role-based therapist field visibility
+        // Role-based therapist field visibility for Create Form
         const roleSelect = document.getElementById('role');
         const therapistField = document.getElementById('therapistId').parentElement;
         
-        roleSelect.addEventListener('change', function() {
-            if (this.value === 'therapist') {
-                therapistField.style.display = 'block';
-                document.getElementById('therapistId').required = true;
-            } else {
-                therapistField.style.display = 'none';
-                document.getElementById('therapistId').required = false;
-                document.getElementById('therapistId').value = '';
-            }
-        });
+        if (roleSelect) {
+            roleSelect.addEventListener('change', function() {
+                if (this.value === 'therapist') {
+                    therapistField.style.display = 'block';
+                    document.getElementById('therapistId').required = true;
+                } else {
+                    therapistField.style.display = 'none';
+                    document.getElementById('therapistId').required = false;
+                    document.getElementById('therapistId').value = '';
+                }
+            });
 
-        // Initialize visibility on page load
-        if (roleSelect.value !== 'therapist') {
-            therapistField.style.display = 'none';
+            // Initialize visibility on page load
+            if (roleSelect.value !== 'therapist') {
+                therapistField.style.display = 'none';
+            }
+        }
+
+        // Role-based therapist field visibility for Edit Modal
+        const editRoleSelect = document.getElementById('editRole');
+        const editTherapistGroup = document.getElementById('editTherapistGroup');
+        
+        if (editRoleSelect) {
+            editRoleSelect.addEventListener('change', function() {
+                if (this.value === 'therapist') {
+                    editTherapistGroup.style.display = 'block';
+                    document.getElementById('editTherapistId').required = true;
+                } else {
+                    editTherapistGroup.style.display = 'none';
+                    document.getElementById('editTherapistId').required = false;
+                    document.getElementById('editTherapistId').value = '';
+                }
+            });
         }
     });
 </script>

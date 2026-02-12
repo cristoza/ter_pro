@@ -14,9 +14,9 @@ const Therapist = sequelize.define('Therapist', {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: true,
-    validate: { isEmail: true },
+    // Removed isEmail validation to avoid issues with null values or empty strings being passed incorrectly
   },
   password: {
     type: DataTypes.STRING,
@@ -25,6 +25,15 @@ const Therapist = sequelize.define('Therapist', {
   phone: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  workingHours: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  specialty: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'Físico',
   },
 });
 

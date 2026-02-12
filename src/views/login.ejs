@@ -3,55 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Clínica de Fisiatría</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Iniciar Sesión - Hospital del Adulto Mayor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --bg: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background: white;
+        }
+
+        .login-split {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Left Side - Brand/Visual */
+        .brand-side {
+            flex: 1;
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><g fill="%23ffffff" fill-opacity="0.05"><path d="M0 0h20L0 20z"/></g></svg>');
+            opacity: 0.3;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .brand-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            width: 120px;
+            height: 120px;
+            line-height: 120px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .brand-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-text {
+            font-size: 18px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Right Side - Form */
+        .form-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            background: white;
+            max-width: 600px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-left: 44px; /* Space for icon */
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            outline: none;
+            background: var(--bg);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #ef4444;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 900px) {
+            .brand-side { display: none; }
+            .form-side { max-width: 100%; background: var(--bg); }
+            .login-card { background: white; padding: 32px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        }
+    </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <h1>🏥 Clínica de Fisiatría</h1>
-                <p>¡Bienvenido de nuevo! Por favor inicia sesión para continuar</p>
+    <div class="login-split">
+        <!-- Left Side -->
+        <div class="brand-side">
+            <div class="brand-content">
+                <div class="brand-icon"></div>
+                <h1 class="brand-title">Hospital del Adulto Mayor</h1>
+                <p class="brand-text">Sistema de gestión de citas</p>
             </div>
-            
-            <% if (error) { %>
-                <div class="alert alert-danger">
-                    <strong>⚠️ Error:</strong> <%= error %>
+        </div>
+
+        <!-- Right Side -->
+        <div class="form-side">
+            <div class="login-card">
+                <div class="login-header">
+                    <h2>Bienvenido de nuevo</h2>
+                    <p>Ingresa tus credenciales para acceder al sistema</p>
                 </div>
-            <% } %>
-            
-            <form method="POST" action="/login">
-                <div class="form-group">
-                    <label for="username">Usuario</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Ingresa tu usuario"
-                        required 
-                        autofocus
-                    >
+
+                <% if (error) { %>
+                    <div class="alert">
+                        <span></span>
+                        <span><%= error %></span>
+                    </div>
+                <% } %>
+
+                <form method="POST" action="/login">
+                    <div class="form-group">
+                        <label for="username">Usuario</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon"></span>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                placeholder="Ej. admin"
+                                required 
+                                autofocus
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon"></span>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                placeholder="••••••••"
+                                required
+                                autocomplete="current-password"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-login">
+                        Iniciar Sesión
+                    </button>
+                </form>
+
+                <div class="footer">
+                    <p>© <%= new Date().getFullYear() %> Hospital del Adulto Mayor</p>
+                    <p>Sistema de gestión de citas</p>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Ingresa tu contraseña"
-                        required
-                    >
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #f1f5f9; text-align: center; color: var(--muted); font-size: 13px;">
+                    <p><strong>Cuentas de Demostración:</strong></p>
+                    <p>admin / admin123 • doctor / doctor123 • secretary / secretary123</p>
                 </div>
-                
-                <button type="submit" class="btn" style="width: 100%; justify-content: center;">
-                    🔐 Iniciar Sesión
-                </button>
-            </form>
-            
-            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #f1f5f9; text-align: center; color: var(--muted); font-size: 13px;">
-                <p>👤 <strong>Cuentas de Demostración:</strong></p>
-                <p>admin / admin123 • doctor / doctor123 • secretary / secretary123</p>
             </div>
         </div>
     </div>

@@ -29,6 +29,7 @@ async function loadTherapists() {
       <tr>
         <td>${escapeHtml(t.id)}</td>
         <td>${escapeHtml(t.name)}</td>
+        <td>${escapeHtml(t.specialty || 'Físico')}</td>
         <td>${escapeHtml(t.email)}</td>
         <td>${escapeHtml(t.phone || '')}</td>
         <td>
@@ -90,6 +91,16 @@ async function createOrUpdatePatient(form) {
 // Store newly created appointment IDs for highlighting
 let newAppointmentIds = new Set();
 
+function resetFormState(form) {
+  form.reset();
+  delete form.dataset.editId;
+  const btn = form.querySelector('button[type="submit"]');
+  if (btn) btn.textContent = 'Crear Cita';
+  
+  const cancelBtn = form.querySelector('.cancel-edit-btn');
+  if (cancelBtn) cancelBtn.remove();
+}
+
 // --- Appointments ---
 async function loadAppointments(highlightIds = []) {
   const table = document.querySelector('#appointments-table');
@@ -130,6 +141,7 @@ async function loadAppointments(highlightIds = []) {
         return `
         <tr${highlightClass} data-id="${a.id}">
           <td>${escapeHtml(a.id)}</td>
+          <td>${escapeHtml(a.creationDate || '')}</td>
           <td>${escapeHtml(a.date)}</td>
           <td>${escapeHtml(a.time)}</td>
           <td>${escapeHtml(a.patientName || '')}</td>
@@ -215,7 +227,7 @@ async function createOrUpdateAppointment(form) {
         newIds.push(result.created.id);
       }
       
-      form.reset();
+      resetFormState(form);
       await loadAppointments(newIds);
       return;
     } catch (err) {
@@ -225,7 +237,7 @@ async function createOrUpdateAppointment(form) {
       return;
     }
   }
-  form.reset();
+  resetFormState(form);
   await loadAppointments();
 }
 
@@ -274,6 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (e.target.matches('.edit-therapist')) {
         const id = e.target.dataset.id; const t = await api(`/therapists/${id}`);
         tForm.name.value = t.name || ''; tForm.email.value = t.email || ''; tForm.phone.value = t.phone || '';
+        if (tForm.specialty) tForm.specialty.value = t.specialty || 'Físico';
         tForm.dataset.editId = t.id;
       }
     });
@@ -321,6 +334,23 @@ document.addEventListener('DOMContentLoaded', async () => {
           aForm.patientContact.value = a.patientContact || '';
           if (aForm.patientCedula) aForm.patientCedula.value = a.patientCedula || '';
           aForm.dataset.editId = a.id;
+
+          // UI Updates
+          const submitBtn = aForm.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = 'Actualizar Cita';
+
+          let cancelBtn = aForm.querySelector('.cancel-edit-btn');
+          if (!cancelBtn) {
+             cancelBtn = document.createElement('button');
+             cancelBtn.type = 'button';
+             cancelBtn.className = 'btn btn-secondary cancel-edit-btn';
+             cancelBtn.textContent = 'Cancelar';
+             cancelBtn.style.marginLeft = '10px';
+             cancelBtn.onclick = () => {
+                 resetFormState(aForm);
+             };
+             if (submitBtn) submitBtn.parentNode.appendChild(cancelBtn);
+          }
         }
       });
     }
@@ -344,25 +374,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// auto-lookup patient by cedula when typing in appointment form
-document.addEventListener('input', async (e) => {
-  if (e.target.matches('input[name="patientCedula"]')) {
-    const val = e.target.value.trim();
-    const form = e.target.closest('form'); if (!form) return;
-    const nameInput = form.querySelector('input[name="patientName"]');
-    const contactInput = form.querySelector('input[name="patientContact"]');
-    if (!val) return;
-    try {
-      const p = await api(`/patients/cedula/${encodeURIComponent(val)}`);
-      if (p) {
-        if (nameInput && !nameInput.value) nameInput.value = p.name || '';
-        if (contactInput && !contactInput.value) contactInput.value = p.contact || '';
-      }
-    } catch (_) {
-      // not found: do nothing
-    }
-  }
-});
+// auto-lookup patient by cedula when typing in appointment form - DISABLED per request
+// document.addEventListener('input', async (e) => {
+//   if (e.target.matches('input[name="patientCedula"]')) {
+//     const val = e.target.value.trim();
+//     const form = e.target.closest('form'); if (!form) return;
+//     const nameInput = form.querySelector('input[name="patientName"]');
+//     const contactInput = form.querySelector('input[name="patientContact"]');
+//     if (!val) return;
+//     try {
+//       const p = await api(`/patients/cedula/${encodeURIComponent(val)}`);
+//       if (p) {
+//         if (nameInput && !nameInput.value) nameInput.value = p.name || '';
+//         if (contactInput && !contactInput.value) contactInput.value = p.contact || '';
+//       }
+//     } catch (_) {
+//       // not found: do nothing
+//     }
+//   }
+// });
 
 // delegated click handler for the "Check" button next to cedula fields
 document.addEventListener('click', async (e) => {
@@ -384,8 +414,8 @@ document.addEventListener('click', async (e) => {
     if (resultEl) resultEl.innerHTML = `<span style="color:green">Found: ${escapeHtml(p.name)} ${escapeHtml(p.contact || '')}</span>`;
     const nameInput = form.querySelector('input[name="patientName"]');
     const contactInput = form.querySelector('input[name="patientContact"]');
-    if (nameInput && !nameInput.value) nameInput.value = p.name || '';
-    if (contactInput && !contactInput.value) contactInput.value = p.contact || '';
+    if (nameInput) nameInput.value = p.name || '';
+    if (contactInput) contactInput.value = p.contact || '';
   } catch (err) {
     form.dataset.patientExists = '0';
     if (resultEl) resultEl.innerHTML = `<span style="color:crimson">No patient found with cédula ${escapeHtml(ced)}</span>`;

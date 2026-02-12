@@ -3,7 +3,7 @@
 <div class="therapist-container">
   <!-- Header -->
   <div class="therapist-header">
-    <h1>👨‍⚕️ Mi Horario</h1>
+    <h1>Mi Horario</h1>
     <p class="welcome-text">¡Bienvenido, <strong><%= therapistName %></strong>!</p>
     <p class="subtitle">Estas son tus citas programadas</p>
   </div>
@@ -11,7 +11,7 @@
   <!-- Filter Card -->
   <div class="card filter-card">
     <div class="card-header">
-      <h2>🔍 Filtrar Citas</h2>
+      <h2>Filtrar Citas</h2>
     </div>
     <div class="filter-body">
       <div class="filter-controls">
@@ -19,7 +19,7 @@
           <label for="filter-date">Filtrar por fecha</label>
           <input type="date" id="filter-date">
         </div>
-        <button id="clear-filter" class="btn btn-secondary">🔄 Mostrar Todas</button>
+        <button id="clear-filter" class="btn btn-secondary">Mostrar Todas</button>
       </div>
     </div>
   </div>
@@ -27,7 +27,7 @@
   <!-- Schedule Card -->
   <div class="card schedule-card">
     <div class="card-header">
-      <h2>📋 Mis Citas Programadas</h2>
+      <h2>Mis Citas Programadas</h2>
       <p class="appointment-count"><span id="count">0</span> citas</p>
     </div>
     
@@ -403,8 +403,8 @@ function renderAppointments(appointments) {
   mobileContainer.innerHTML = appointments.map(a => `
     <div class="appointment-card">
       <div class="appointment-card-header">
-        <div class="appointment-date">📅 ${escapeHtml(a.date)}</div>
-        <div class="appointment-time">⏰ ${escapeHtml(a.time)}</div>
+        <div class="appointment-date">${escapeHtml(a.date)}</div>
+        <div class="appointment-time">${escapeHtml(a.time)}</div>
       </div>
       <div class="appointment-info">
         <div class="info-row">

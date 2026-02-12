@@ -1,0 +1,43 @@
+<%- include('../layout-simple') %>
+
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 32px;">
+        <h1>Próximas Citas</h1>
+        <p class="muted" style="font-size: 18px;">Paciente: <strong><%= patientName %></strong></p>
+    </div>
+
+    <% if (appointments.length === 0) { %>
+        <div class="card" style="text-align: center; padding: 40px;">
+            <p class="muted">No hay citas próximas programadas.</p>
+        </div>
+    <% } else { %>
+        <div class="card">
+            <div class="table-responsive">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #eee; text-align: left;">
+                            <th style="padding: 12px;">Fecha</th>
+                            <th style="padding: 12px;">Hora</th>
+                            <th style="padding: 12px;">Terapista</th>
+                            <th style="padding: 12px;">Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% appointments.forEach(app => { %>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px;"><%= app.date %></td>
+                                <td style="padding: 12px; font-weight: bold; color: var(--accent);"><%= app.time.substring(0, 5) %></td>
+                                <td style="padding: 12px;"><%= app.therapist ? app.therapist.name : 'Asignado' %></td>
+                                <td style="padding: 12px;"><%= app.durationMinutes %> min</td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <% } %>
+    
+    <div style="text-align: center; margin-top: 30px;">
+        <p class="muted" style="font-size: 14px;">Hospital del Adulto Mayor</p>
+    </div>
+</div>

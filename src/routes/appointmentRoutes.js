@@ -18,5 +18,7 @@ router.put('/appointments/:id', appointmentController.updateAppointment);
 router.delete('/appointments/:id', appointmentController.deleteAppointment);
 // POST /api/appointments/series - create consecutive appointments
 router.post('/appointments/series', validateAppointmentCreate, appointmentController.createSeries);
+// POST /api/appointments/preview - preview appointments before creation
+router.post('/appointments/preview', validateAppointmentCreate, appointmentController.previewAppointment);
 
 module.exports = router;

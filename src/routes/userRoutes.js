@@ -13,6 +13,9 @@ router.get('/', userController.getUsersPage);
 // Create user
 router.post('/', validateUserCreate, userController.createUser);
 
+// Update user
+router.post('/:id/update', userController.updateUser);
+
 // Delete user
 router.post('/:id/delete', userController.deleteUser);
 

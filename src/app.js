@@ -16,8 +16,9 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
         },
     },
@@ -26,7 +27,7 @@ app.use(helmet({
 // Rate limiting for login attempts
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 requests per windowMs
+    max: 100, // limit each IP to 100 requests per windowMs
     message: 'Too many login attempts, please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
@@ -50,10 +51,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // true in production with HTTPS
+        secure: false, // Set to false to work on HTTP (local network)
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        sameSite: 'strict'
+        sameSite: 'lax' // Changed from 'strict' to 'lax' for better compatibility
     }
 }));
 
@@ -76,6 +77,9 @@ setRoutes(app);
 app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on:`);
+    console.log(`  - Local:   http://localhost:${PORT}`);
+    console.log(`  - Network: http://<your-ip>:${PORT}`);
+    console.log(`\nTo find your IP address, run: ipconfig (Windows) or ifconfig (Linux/Mac)`);
 });

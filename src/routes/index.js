@@ -3,16 +3,23 @@ const appointmentRoutes = require('./appointmentRoutes');
 const therapistRoutes = require('./therapistRoutes');
 const patientRoutes = require('./patientRoutes');
 const userRoutes = require('./userRoutes');
+const analyticsRoutes = require('./analyticsRoutes');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const authController = require('../controllers/authController');
 const doctorController = require('../controllers/doctorController');
 const therapistDashboardController = require('../controllers/therapistDashboardController');
 const secretaryController = require('../controllers/secretaryController');
+const publicController = require('../controllers/publicController');
 
 function setRoutes(app) {
+    // Public Patient Portal
+    app.get('/portal/patient/:publicId', publicController.showPatientSchedule);
+    app.get('/portal/patient/:publicId/pdf', publicController.downloadSchedulePDF);
+
     // Authentication routes (public)
     app.get('/login', authController.showLogin);
     app.post('/login', authController.login);
+    app.post('/api/login', authController.apiLogin);
     app.post('/logout', authController.logout);
     
     // Landing page redirect to login
@@ -34,23 +41,36 @@ function setRoutes(app) {
     // Therapist routes (therapist and admin only)
     app.get('/therapist', requireRole('therapist', 'admin'), therapistDashboardController.showDashboard);
     app.get('/therapist/appointments', requireRole('therapist', 'admin'), therapistDashboardController.getAppointments);
+    // Allow therapists to update their own appointments
+    app.put('/therapist/appointments/:id', requireRole('therapist', 'admin'), therapistDashboardController.updateAppointment);
 
-    // Secretary routes (secretary and admin only)
+    // Secretary routes (View Routes - likely deprecated by React but kept for fallback)
     app.get('/secretary', requireRole('secretary', 'admin'), secretaryController.showDashboard);
-    app.get('/secretary/appointments', requireRole('secretary', 'admin'), secretaryController.getAllAppointments);
-    app.get('/secretary/therapists', requireRole('secretary', 'admin'), secretaryController.getAllTherapists);
+    app.get('/secretary/patients', requireRole('secretary', 'admin'), secretaryController.showPatientsSearch);
+
+    // Secretary API Routes (JSON) - Prefix with /api/secretary to avoid conflicts
+    app.get('/api/secretary/patients/:publicId/batches', requireRole('secretary', 'admin'), secretaryController.getPatientBatches);
+    app.get('/api/secretary/appointments', requireRole('secretary', 'admin'), secretaryController.getAllAppointments);
+    app.get('/api/secretary/therapists', requireRole('secretary', 'admin'), secretaryController.getAllTherapists);
     
     // Secretary can also access appointment API for editing
     app.use('/secretary/api', requireRole('secretary', 'admin'), appointmentRoutes);
 
     // API routes (doctors and admins can create appointments)
     app.use('/api', requireRole('doctor', 'admin'), appointmentRoutes);
+    app.use('/api', requireRole('admin'), analyticsRoutes);
     
     // Admin-only routes for therapist/patient/user management
     app.use('/therapists', requireRole('admin'), therapistRoutes);
-    // Patients routes - doctors can read (for cedula lookup), only admin can create/update/delete
-    app.use('/patients', requireRole('doctor', 'admin'), patientRoutes);
+    // Patients routes - doctors and secretaries can read, only admin can create/update/delete
+    app.use('/patients', requireRole('doctor', 'secretary', 'admin'), patientRoutes);
+    
+    // Legacy EJS route for Users (restored for backward compatibility)
     app.use('/admin/users', requireRole('admin'), userRoutes);
+    
+    // New JSON API route for React Users page
+    const apiUserRoutes = require('./apiUserRoutes');
+    app.use('/api/users', apiUserRoutes);
 
     // Admin UI pages (admin only)
     const adminController = require('../controllers/adminController');
@@ -58,9 +78,14 @@ function setRoutes(app) {
     app.get('/admin/therapists', requireRole('admin'), adminController.therapists);
     app.get('/admin/patients', requireRole('admin'), adminController.patients);
     app.get('/admin/appointments', requireRole('admin'), adminController.appointments);
+    app.get('/admin/analytics', requireRole('admin'), adminController.analytics);
     
     const availabilityRoutes = require('./availabilityRoutes');
     app.use('/availability', requireRole('admin'), availabilityRoutes);
+    
+    // Machine routes
+    const machineRoutes = require('./machineRoutes');
+    app.use('/api/machines', machineRoutes);
 }
 
 module.exports = { setRoutes };

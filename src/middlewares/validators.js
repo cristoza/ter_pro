@@ -150,9 +150,9 @@ const validators = {
       errors.push('Therapist name is required');
     }
 
-    // Validate email
-    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push('Valid email address is required');
+    // Validate email (only if provided)
+    if (email && (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      errors.push('Valid email address is required if provided');
     }
 
     // Validate password

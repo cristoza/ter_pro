@@ -15,6 +15,16 @@
                 <input type="text" id="patientName" name="patientName" required>
             </div>
             <div class="form-group">
+                <label for="therapyType">Therapy Type:</label>
+                <select id="therapyType" name="therapyType">
+                    <option value="Físico">Physical</option>
+                    <option value="Ocupacional">Occupational</option>
+                    <option value="Combinada">Combined (Physical + Occupational)</option>
+                    <option value="Lenguaje">Language</option>
+                    <option value="Respiratoria">Respiratory</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="date">Preferred Date (optional):<br><span style="font-weight:normal;font-size:0.95em;">Leave blank to auto-select soonest available</span></label>
                 <input type="date" id="date" name="date">
             </div>

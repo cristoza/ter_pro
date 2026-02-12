@@ -34,10 +34,13 @@ module.exports = {
 
     async updateAppointment(req, res) {
         try {
+            // Debug: log incoming update payload for troubleshooting secretary edits
+            console.log('[APPOINTMENTS] Update request', { id: req.params.id, body: req.body });
             const updated = await appointmentService.updateAppointment(req.params.id, req.body);
             if (!updated) return res.status(404).json({ message: 'Appointment not found' });
             res.status(200).json(updated);
         } catch (error) {
+            console.error('[APPOINTMENTS] Update error:', error);
             res.status(500).json({ message: 'Error updating appointment', error: error.message });
         }
     },
@@ -74,4 +77,15 @@ module.exports = {
             res.status(500).json({ message: 'Error creating appointment series', error: err.message });
         }
     },
+
+    async previewAppointment(req, res) {
+        try {
+            const preview = await appointmentService.previewAppointment(req.body);
+            res.status(200).json(preview);
+        } catch (err) {
+            if (err.code === 'NO_SLOT') return res.status(409).json({ message: err.message });
+            if (err.code === 'NO_CANDIDATE') return res.status(400).json({ message: err.message });
+            res.status(500).json({ message: 'Error generating preview', error: err.message });
+        }
+    }
 };

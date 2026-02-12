@@ -2,14 +2,14 @@
 
 <div style="max-width: 1100px; margin: 0 auto;">
   <div style="text-align: center; margin-bottom: 32px;">
-    <h1>👨‍⚕️ Terapeutas</h1>
-    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Gestiona los perfiles de terapeutas</p>
+    <h1>Terapistas</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Gestiona los perfiles de terapistas</p>
     <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
   </div>
 
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>➕ Crear Nuevo Terapeuta</h2>
+      <h2>Crear Nuevo Terapista</h2>
     </div>
     <form id="therapist-form">
       <div class="form-row">
@@ -17,22 +17,33 @@
         <div class="form-group"><label>Correo Electrónico</label><input type="email" name="email" placeholder="correo@ejemplo.com" required /></div>
       </div>
       <div class="form-row">
+        <div class="form-group">
+          <label>Especialidad</label>
+          <select name="specialty">
+            <option value="Físico">Terapia Física</option>
+            <option value="Ocupacional">Terapia Ocupacional</option>
+            <option value="Lenguaje">Terapia de Lenguaje</option>
+            <option value="Respiratoria">Terapia Respiratoria</option>
+          </select>
+        </div>
         <div class="form-group"><label>Teléfono</label><input type="text" name="phone" placeholder="Número de teléfono" /></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Contraseña</label><input type="password" name="password" placeholder="Contraseña inicial" required /></div>
       </div>
       <div style="text-align: center; margin-top: 24px;">
-        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">✓ Crear Terapeuta</button>
+        <button type="submit" class="btn" style="padding: 14px 32px; font-size: 16px;">Crear Terapista</button>
       </div>
     </form>
   </div>
 
   <div class="card">
     <div class="card-header" style="text-align: center;">
-      <h2>📋 Terapeutas Existentes</h2>
+      <h2>Terapistas Existentes</h2>
     </div>
     <div class="table-responsive">
       <table id="therapists-table">
-        <thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Especialidad</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>

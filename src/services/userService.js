@@ -99,6 +99,81 @@ class UserService {
   }
 
   /**
+   * Update user details
+   */
+  async updateUser(userId, updateData) {
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const { username, password, role, therapistId } = updateData;
+
+      // Check username uniqueness if changed
+      if (username && username !== user.username) {
+        const existingUser = await User.findOne({ where: { username } });
+        if (existingUser) {
+          throw new Error('Username already exists');
+        }
+        user.username = username;
+      }
+
+      // Update role
+      if (role) {
+        const validRoles = ['admin', 'doctor', 'therapist', 'secretary'];
+        if (!validRoles.includes(role)) {
+          throw new Error('Invalid role');
+        }
+        user.role = role;
+      }
+
+      // Update therapistId
+      if (role === 'therapist' || (role === undefined && user.role === 'therapist')) {
+        // If role is changing to therapist OR role is staying therapist
+        const targetTherapistId = therapistId || user.therapistId;
+        
+        if (!targetTherapistId) {
+           // If we are updating to therapist role but no ID provided, or keeping therapist role but clearing ID
+           if (role === 'therapist') throw new Error('Therapist ID is required for therapist role');
+        } else {
+           // Validate therapist exists
+           const therapist = await Therapist.findByPk(targetTherapistId);
+           if (!therapist) {
+             throw new Error('Therapist not found');
+           }
+           // Check if therapist already has a user account (excluding this user)
+           const existingTherapistUser = await User.findOne({ 
+             where: { 
+               therapistId: targetTherapistId,
+               id: { [require('sequelize').Op.ne]: userId }
+             } 
+           });
+           if (existingTherapistUser) {
+             throw new Error('This therapist already has a user account');
+           }
+           user.therapistId = targetTherapistId;
+        }
+      } else if (role && role !== 'therapist') {
+        // If role is changing to non-therapist, clear therapistId
+        user.therapistId = null;
+      }
+
+      // Update password if provided
+      if (password && password.trim() !== '') {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user.password = hashedPassword;
+      }
+
+      await user.save();
+      return user;
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete a user
    */
   async deleteUser(userId) {

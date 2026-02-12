@@ -1,0 +1,156 @@
+<%- include('../layout') %>
+
+<div style="max-width: 1100px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 32px;">
+    <h1>Analíticas y Rendimiento</h1>
+    <p class="muted" style="font-size: 16px; margin-bottom: 16px;">Monitorización de citas y rendimiento de terapistas</p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a href="/admin" class="btn btn-secondary">← Volver al Panel</a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+      <h2>Filtros</h2>
+    </div>
+    <form id="analytics-filter-form" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+      <div class="form-group" style="flex: 1; min-width: 200px;">
+        <label>Fecha Inicio</label>
+        <input type="date" name="startDate" id="startDate">
+      </div>
+      <div class="form-group" style="flex: 1; min-width: 200px;">
+        <label>Fecha Fin</label>
+        <input type="date" name="endDate" id="endDate">
+      </div>
+      <div class="form-group" style="flex: 1; min-width: 200px;">
+        <label>Terapista</label>
+        <select name="therapistId" id="therapistId">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <button type="submit" class="btn">Actualizar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Summary Cards -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 24px;">
+    <div class="card" style="text-align: center; padding: 24px;">
+      <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Total Pacientes</h3>
+      <p id="totalPatients" style="font-size: 36px; font-weight: 700; color: #0f172a; margin: 12px 0;">-</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 24px;">
+      <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Total Terapistas</h3>
+      <p id="totalTherapists" style="font-size: 36px; font-weight: 700; color: #0f172a; margin: 12px 0;">-</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 24px;">
+      <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Citas (Periodo)</h3>
+      <p id="totalAppointments" style="font-size: 36px; font-weight: 700; color: #0f172a; margin: 12px 0;">-</p>
+    </div>
+  </div>
+
+  <!-- Detailed Stats -->
+  <div class="card">
+    <div class="card-header">
+      <h2>Citas por Terapista</h2>
+    </div>
+    <div class="table-responsive">
+      <table id="therapist-stats-table">
+        <thead>
+          <tr>
+            <th>Terapista</th>
+            <th>Total Citas</th>
+            <th>% del Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('analytics-filter-form');
+    const therapistSelect = document.getElementById('therapistId');
+    
+    // Load therapists for dropdown
+    try {
+        const res = await fetch('/therapists');
+        const therapists = await res.json();
+        therapists.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.name;
+            therapistSelect.appendChild(opt);
+        });
+    } catch (e) { console.error(e); }
+
+    // Set default dates (current month)
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    // Format dates as YYYY-MM-DD for input type="date"
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    
+    document.getElementById('startDate').value = formatDate(firstDay);
+    document.getElementById('endDate').value = formatDate(lastDay);
+
+    async function loadStats() {
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        try {
+            const res = await fetch(`/api/analytics?${params}`);
+            const data = await res.json();
+            
+            document.getElementById('totalPatients').textContent = data.totalPatients;
+            document.getElementById('totalTherapists').textContent = data.totalTherapists;
+            document.getElementById('totalAppointments').textContent = data.totalAppointments;
+
+            const tbody = document.querySelector('#therapist-stats-table tbody');
+            tbody.innerHTML = '';
+            
+            if (data.appointmentsByTherapist.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No hay datos para este periodo</td></tr>';
+            } else {
+                data.appointmentsByTherapist.forEach(item => {
+                    const count = parseInt(item.count);
+                    const total = parseInt(data.totalAppointments);
+                    
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.therapist ? item.therapist.name : 'Sin asignar'}</td>
+                        <td>${count}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${percentage}%; height: 100%; background: #3b82f6;"></div>
+                                </div>
+                                <span>${percentage}%</span>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error cargando analíticas');
+        }
+    }
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        loadStats();
+    });
+
+    // Initial load
+    loadStats();
+});
+</script>

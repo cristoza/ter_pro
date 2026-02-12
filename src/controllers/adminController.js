@@ -14,4 +14,8 @@ module.exports = {
   appointments(req, res) {
     res.render('admin/appointments');
   },
+
+  analytics(req, res) {
+    res.render('admin/analytics');
+  },
 };

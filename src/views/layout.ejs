@@ -1,3 +1,4 @@
+<% if (typeof header === 'undefined' || header === 'start') { %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,29 +8,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Clínica de Fisiatría - Sistema de Gestión</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <title>Hospital del Adulto Mayor - Sistema de gestión de citas</title>
 </head>
 <body>
     <header class="site-header">
         <div class="header-inner">
             <div class="brand">
-                <a href="/admin" class="logo">🏥 Fisiatría</a>
+                <a href="/admin" class="logo">Hospital del Adulto Mayor</a>
                 <span class="tag">Portal Administrativo</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 20px;">
+            <div class="header-right">
                 <nav class="main-nav">
                     <ul>
-                        <li><a href="/admin">📊 Panel</a></li>
-                        <li><a href="/admin/therapists">👨‍⚕️ Terapeutas</a></li>
-                        <li><a href="/admin/patients">🧑‍🤝‍🧑 Pacientes</a></li>
-                        <li><a href="/admin/appointments">📅 Citas</a></li>
-                        <li><a href="/admin/availability">🕐 Disponibilidad</a></li>
-                        <li><a href="/admin/users">👥 Usuarios</a></li>
+                        <li><a href="/admin">Panel</a></li>
+                        <li><a href="/admin/therapists">Terapistas</a></li>
+                        <li><a href="/admin/patients">Pacientes</a></li>
+                        <li><a href="/admin/appointments">Citas</a></li>
+                        <li><a href="/admin/analytics">Analíticas</a></li>
+                        <li><a href="/admin/users">Usuarios</a></li>
                     </ul>
                 </nav>
                 <div class="header-actions">
                     <form method="POST" action="/logout" style="margin: 0;">
-                        <button type="submit" class="btn btn-danger btn-sm">🚪 Cerrar Sesión</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Cerrar Sesión</button>
                     </form>
                 </div>
             </div>
@@ -37,13 +39,19 @@
     </header>
 
     <main class="container main-content" role="main">
-        <%- (typeof body !== 'undefined' ? body : '') %>
+        <% if (typeof body !== 'undefined') { %>
+            <%- body %>
+        <% } %>
+<% } %>
+
+<% if (typeof header === 'undefined' || header === 'end') { %>
     </main>
 
     <footer class="site-footer">
-        <p>© <%= new Date().getFullYear() %> Clínica de Fisiatría — Gestión Profesional de Salud</p>
+        <p>© <%= new Date().getFullYear() %> Hospital del Adulto Mayor — Sistema de gestión de citas</p>
     </footer>
 
     <script src="/js/main.js"></script>
 </body>
 </html>
+<% } %>

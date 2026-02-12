@@ -3,6 +3,9 @@
 // Check if user is logged in
 function requireAuth(req, res, next) {
     if (!req.session || !req.session.userId) {
+        if (req.originalUrl.startsWith('/api') || req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+             return res.status(401).json({ message: 'Unauthorized' });
+        }
         return res.redirect('/login');
     }
     next();
@@ -12,9 +15,20 @@ function requireAuth(req, res, next) {
 function requireRole(...roles) {
     return (req, res, next) => {
         if (!req.session || !req.session.userId) {
+            if (req.originalUrl.startsWith('/api') || req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+                 return res.status(401).json({ message: 'Unauthorized' });
+            }
             return res.redirect('/login');
         }
-        if (!roles.includes(req.session.userRole)) {
+        const userRole = req.session.userRole;
+        if (!roles.includes(userRole)) {
+            // Debug log unauthorized access attempts for troubleshooting
+            console.warn(`[AUTH] 403 denied for role="${userRole}" (type: ${typeof userRole}, len: ${userRole?.length}) on ${req.method} ${req.originalUrl}`);
+            console.warn(`[AUTH] Required roles: ${JSON.stringify(roles)}`);
+            
+            if (req.originalUrl.startsWith('/api') || req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
+                 return res.status(403).json({ message: 'Forbidden' });
+            }
             return res.status(403).json({ message: 'Access denied. Insufficient permissions.' });
         }
         next();
