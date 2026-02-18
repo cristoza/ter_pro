@@ -13,7 +13,9 @@ module.exports = {
             
             res.render('therapist', { 
                 therapistName: therapist.name,
-                therapistId: therapistId
+                therapistId: therapistId,
+                specialty: therapist.specialty,
+                therapist: therapist
             });
         } catch (error) {
             console.error('Error loading therapist dashboard:', error);

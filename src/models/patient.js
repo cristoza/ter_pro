@@ -30,6 +30,11 @@ const Patient = sequelize.define('Patient', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'regular', // possible value 'R'
+  },
 }, {
   indexes: [
     {

@@ -11,6 +11,18 @@ const DoctorDashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [viewMode, setViewMode] = useState('list'); // 'list' | 'calendar'
     
+    // Create Patient State
+    const [showPatientModal, setShowPatientModal] = useState(false);
+    const [patientFormData, setPatientFormData] = useState({
+        name: '',
+        cedula: '',
+        userType: 'regular', // default
+        email: '',
+        phone: ''
+    });
+    const [editingPatientId, setEditingPatientId] = useState(null);
+    const [patientSubmitLoading, setPatientSubmitLoading] = useState(false);
+    
     // Filters & Search
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -56,6 +68,61 @@ const DoctorDashboard = () => {
 
         fetchData();
     }, []);
+
+    const handlePatientInputChange = (e) => {
+        const { name, value } = e.target;
+        setPatientFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleCreatePatient = async (e) => {
+        e.preventDefault();
+        setPatientSubmitLoading(true);
+        try {
+            const payload = {
+                ...patientFormData,
+                type: patientFormData.userType
+            };
+            
+            let res;
+            if (editingPatientId) {
+                res = await api.put(`/patients/${editingPatientId}`, payload);
+                setPatients(prev => prev.map(p => p.id === editingPatientId ? res.data : p));
+                toast.success('Paciente actualizado exitosamente');
+                
+                // If this was the selected patient for an appointment, update search display
+                if (formData.patientId === editingPatientId) {
+                    setPatientSearch(`${res.data.name} (${res.data.cedula}) - ${res.data.type === 'R' ? 'Tipo R' : 'Regular'}`);
+                }
+            } else {
+                res = await api.post('/api/patients', payload);
+                setPatients(prev => [...prev, res.data]);
+                setPatientSearch(`${res.data.name} (${res.data.cedula}) - ${res.data.type === 'R' ? 'Tipo R' : 'Regular'}`);
+                setFormData(prev => ({...prev, patientId: res.data.id}));
+                toast.success('Paciente creado exitosamente');
+            }
+            
+            setShowPatientModal(false);
+            setPatientFormData({ name: '', cedula: '', userType: 'regular', email: '', phone: '' });
+            setEditingPatientId(null);
+        } catch (err) {
+            console.error('Error saving patient:', err);
+            toast.error(err.response?.data?.message || 'Error al guardar paciente.');
+        } finally {
+            setPatientSubmitLoading(false);
+        }
+    };
+
+    const handleEditPatientClick = (patient) => {
+        setPatientFormData({
+            name: patient.name,
+            cedula: patient.cedula,
+            userType: patient.type || 'regular',
+            email: patient.contact ? patient.contact.split(' | ')[1] || '' : '', // Rough parsing if format matches
+            phone: patient.contact ? patient.contact.split(' | ')[0] || '' : ''
+        });
+        setEditingPatientId(patient.id);
+        setShowPatientModal(true);
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -194,9 +261,18 @@ const DoctorDashboard = () => {
                         Calendario
                     </button>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                    + Nueva Cita
-                </button>
+                <div style={{display: 'flex', gap: '8px'}}>
+                    <button 
+                        className="btn" 
+                        onClick={() => setShowPatientModal(true)}
+                        style={{backgroundColor: '#6c757d', color: 'white', border: 'none'}}
+                    >
+                        + Nuevo Paciente
+                    </button>
+                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                        + Nueva Cita
+                    </button>
+                </div>
             </div>
             
             <div className="card">
@@ -307,7 +383,7 @@ const DoctorDashboard = () => {
                                                 key={p.id}
                                                 onClick={() => {
                                                     setFormData(prev => ({...prev, patientId: p.id}));
-                                                    setPatientSearch(`${p.name} (${p.cedula})`);
+                                                    setPatientSearch(`${p.name} (${p.cedula}) - ${p.type === 'R' ? 'Tipo R' : 'Regular'}`);
                                                     setShowPatientResults(false);
                                                 }}
                                                 style={{padding: '8px', cursor: 'pointer', borderBottom: '1px solid #eee'}}
@@ -315,11 +391,29 @@ const DoctorDashboard = () => {
                                                 onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
                                             >
                                                 {p.name} <small className="muted">({p.cedula})</small>
+                                                {p.type === 'R' && <span style={{marginLeft: '8px', fontSize: '0.8em', color: '#d32f2f', backgroundColor: '#ffebee', padding: '2px 6px', borderRadius: '4px'}}>Tipo R</span>}
                                             </div>
                                         ))}
                                     </div>
                                 )}
-                                {formData.patientId && <small style={{color: 'green'}}>Paciente seleccionado ✓</small>}
+                                {formData.patientId && (
+                                    <div style={{marginTop: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <small style={{color: 'green'}}>Paciente seleccionado ✓</small>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                const p = patients.find(pat => pat.id === formData.patientId);
+                                                if (p) handleEditPatientClick(p);
+                                            }}
+                                            style={{
+                                                background: 'none', border: 'none', color: '#2196f3', 
+                                                textDecoration: 'underline', cursor: 'pointer', fontSize: '0.9em'
+                                            }}
+                                        >
+                                            Editar datos del paciente
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{display: 'flex', gap: '12px', marginBottom: '12px'}}>
@@ -453,6 +547,91 @@ const DoctorDashboard = () => {
                                     style={{padding: '8px 16px'}}
                                 >
                                     {submitLoading ? 'Creando...' : 'Crear Cita'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Create Patient Modal */}
+            {showPatientModal && (
+                <div className="modal-overlay" style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', 
+                    justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                }}>
+                    <div className="modal-content" style={{
+                        backgroundColor: 'white', padding: '24px', borderRadius: '8px', 
+                        maxWidth: '500px', width: '100%'
+                    }}>
+                        <h3>{editingPatientId ? 'Editar Paciente' : 'Nuevo Paciente'}</h3>
+                        <form onSubmit={handleCreatePatient}>
+                            <div style={{marginBottom: '12px'}}>
+                                <label style={{display: 'block', marginBottom: '4px'}}>Nombre Completo:</label>
+                                <input 
+                                    type="text" name="name" required
+                                    value={patientFormData.name} onChange={handlePatientInputChange} 
+                                    style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                />
+                            </div>
+                            <div style={{marginBottom: '12px'}}>
+                                <label style={{display: 'block', marginBottom: '4px'}}>Cédula:</label>
+                                <input 
+                                    type="text" name="cedula" required
+                                    value={patientFormData.cedula} onChange={handlePatientInputChange} 
+                                    style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                />
+                            </div>
+                            <div style={{marginBottom: '12px'}}>
+                                <label style={{display: 'block', marginBottom: '4px'}}>Tipo de Paciente:</label>
+                                <select 
+                                    name="userType" 
+                                    value={patientFormData.userType} 
+                                    onChange={handlePatientInputChange}
+                                    style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                >
+                                    <option value="regular">Regular</option>
+                                    <option value="R">R (Especial)</option>
+                                </select>
+                            </div>
+                            <div style={{display: 'flex', gap: '12px', marginBottom: '12px'}}>
+                                <div style={{flex: 1}}>
+                                    <label style={{display: 'block', marginBottom: '4px'}}>Email (Opcional):</label>
+                                    <input 
+                                        type="email" name="email"
+                                        value={patientFormData.email} onChange={handlePatientInputChange} 
+                                        style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                    />
+                                </div>
+                                <div style={{flex: 1}}>
+                                    <label style={{display: 'block', marginBottom: '4px'}}>Teléfono (Opcional):</label>
+                                    <input 
+                                        type="text" name="phone"
+                                        value={patientFormData.phone} onChange={handlePatientInputChange} 
+                                        style={{width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc'}}
+                                    />
+                                </div>
+                            </div>
+                            <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px'}}>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setShowPatientModal(false);
+                                        setEditingPatientId(null);
+                                        setPatientFormData({ name: '', cedula: '', userType: 'regular', email: '', phone: '' });
+                                    }}
+                                    style={{padding: '8px 16px', background: '#ccc', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={patientSubmitLoading}
+                                    className="btn btn-primary"
+                                    style={{padding: '8px 16px'}}
+                                >
+                                    {patientSubmitLoading ? 'Guardando...' : 'Guardar Paciente'}
                                 </button>
                             </div>
                         </form>

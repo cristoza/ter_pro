@@ -7,6 +7,7 @@ const createPatient = async (data) => {
     dob: data.dob,
     contact: data.contact,
     notes: data.notes,
+    type: data.type || 'regular',
   });
 };
 

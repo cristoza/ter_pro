@@ -67,7 +67,7 @@ async function findAvailableMachine(date, time, dur, type = null, specificMachin
 }
 
 // Helper to find slots with machine type support
-async function findAvailableForSlot(date, time, dur, specialty = 'Físico', preferredTherapistId = null, machineType = null, specificMachineId = null) {
+async function findAvailableForSlot(date, time, dur, specialty = 'Físico', preferredTherapistId = null, machineType = null, specificMachineId = null, patientType = null) {
   const TherapistAvailability = require('../models/therapistAvailability');
   
   // 1. Check Machine Availability
@@ -97,7 +97,8 @@ async function findAvailableForSlot(date, time, dur, specialty = 'Físico', pref
         model: Appointment,
         as: 'appointments',
         where: { date },
-        required: false
+        required: false,
+        include: [{ model: Patient, as: 'patient' }]
       }
     ]
   });
@@ -110,6 +111,7 @@ async function findAvailableForSlot(date, time, dur, specialty = 'Físico', pref
     let conflict = false;
     let hasAdjacent = false;
     let load = 0;
+    let rTypeCount = 0;
 
     if (t.appointments && t.appointments.length > 0) {
       load = t.appointments.length;
@@ -118,6 +120,11 @@ async function findAvailableForSlot(date, time, dur, specialty = 'Físico', pref
         const eDur = e.durationMinutes || 30;
         const eEnd = eStart + eDur;
         
+        // Count type 'R' patients for this therapist on this day
+        if (e.patient && e.patient.type === 'R') {
+            rTypeCount++;
+        }
+
         // Conflict Check
         if (newStart < eEnd && eStart < newEnd) {
           conflict = true;
@@ -132,6 +139,12 @@ async function findAvailableForSlot(date, time, dur, specialty = 'Físico', pref
       }
     }
     
+    // Check 'R' type constraint: Only 2 per day per therapist
+    if (patientType === 'R' && rTypeCount >= 2) {
+        // Therapist reached limit for 'R' patients
+        continue; 
+    }
+
     if (!conflict) {
         let score = 0;
         // Priority 1: Patient Preference (Continuity of Care)
@@ -158,14 +171,14 @@ async function findAvailableForSlot(date, time, dur, specialty = 'Físico', pref
   return null;
 }
 
-async function findNextAvailableSlotOnDate(date, startTime, dur, specialty = 'Físico', preferredTherapistId = null, machineType = null, limitTime = '18:00', specificMachineId = null) {
+async function findNextAvailableSlotOnDate(date, startTime, dur, specialty = 'Físico', preferredTherapistId = null, machineType = null, limitTime = '18:00', specificMachineId = null, patientType = null) {
   const step = 30;
   const endLimit = limitTime;
   let cursor = timeToMinutes(startTime);
   const endMin = timeToMinutes(endLimit);
   while (cursor <= endMin) {
     const tStr = `${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`;
-    const tid = await findAvailableForSlot(date, tStr, dur, specialty, preferredTherapistId, machineType, specificMachineId);
+    const tid = await findAvailableForSlot(date, tStr, dur, specialty, preferredTherapistId, machineType, specificMachineId, patientType);
     if (tid) return { time: tStr, therapistId: tid };
     cursor += step;
   }
@@ -173,8 +186,8 @@ async function findNextAvailableSlotOnDate(date, startTime, dur, specialty = 'F�
 }
 
 // Helper for combined therapy (needs 2 therapists)
-async function findAvailableForCombined(date, time, dur) {
-  const t1 = await findAvailableForSlot(date, time, dur, 'Físico');
+async function findAvailableForCombined(date, time, dur, patientType = null) {
+  const t1 = await findAvailableForSlot(date, time, dur, 'Físico', null, null, null, patientType);
   if (!t1) return null;
   
   // We need to find an Occupational therapist who is NOT the same person (though specialties differ, so IDs should differ)
@@ -184,20 +197,20 @@ async function findAvailableForCombined(date, time, dur) {
   // For combined, we need to ensure we can find BOTH.
   // The current findAvailableForSlot returns an ID.
   
-  const t2 = await findAvailableForSlot(date, time, dur, 'Ocupacional');
+  const t2 = await findAvailableForSlot(date, time, dur, 'Ocupacional', null, null, null, patientType);
   if (!t2) return null;
   
   return { physicalId: t1, occupationalId: t2 };
 }
 
-async function findNextAvailableSlotOnDateCombined(date, startTime, dur, limitTime = '18:00') {
+async function findNextAvailableSlotOnDateCombined(date, startTime, dur, limitTime = '18:00', patientType = null) {
   const step = 30;
   const endLimit = limitTime;
   let cursor = timeToMinutes(startTime);
   const endMin = timeToMinutes(endLimit);
   while (cursor <= endMin) {
     const tStr = `${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`;
-    const slots = await findAvailableForCombined(date, tStr, dur);
+    const slots = await findAvailableForCombined(date, tStr, dur, patientType);
     if (slots) return { time: tStr, ...slots };
     cursor += step;
   }
@@ -209,6 +222,7 @@ const proposeAppointment = async (data) => {
   const therapyType = data.therapyType || 'Físico'; // Físico, Ocupacional, Combinada
   const machineType = data.machineType || 'General'; // Default to General cubicle
   const specificMachineId = data.machineId || null; // Capture specific machine preference
+  const patientType = data.patientType || null;
   
   // Scoring / Preferences Setup
   let preferredTherapistId = data.therapistId || null;
@@ -240,10 +254,10 @@ const proposeAppointment = async (data) => {
       
       let next;
       if (therapyType === 'Combinada') {
-        next = await findNextAvailableSlotOnDateCombined(dateStr, startTime, duration, endTime);
+        next = await findNextAvailableSlotOnDateCombined(dateStr, startTime, duration, endTime, patientType);
       } else {
         // Pass preference here
-        next = await findNextAvailableSlotOnDate(dateStr, startTime, duration, therapyType, preferredTherapistId, machineType, endTime, specificMachineId);
+        next = await findNextAvailableSlotOnDate(dateStr, startTime, duration, therapyType, preferredTherapistId, machineType, endTime, specificMachineId, patientType);
       }
       
       // If we found a therapist slot, we MUST check machine availability too
@@ -276,8 +290,8 @@ const proposeAppointment = async (data) => {
 
   // Specific date/time requested
   if (therapyType === 'Combinada') {
-    const found = await findAvailableForCombined(desiredDate, desiredTime, duration);
-    const machineId = found ? await findAvailableMachine(desiredDate, desiredTime, duration) : null;
+    const found = await findAvailableForCombined(desiredDate, desiredTime, duration, patientType);
+    const machineId = found ? await findAvailableMachine(desiredDate, desiredTime, duration, machineType, specificMachineId) : null;
     
     if (found && machineId) {
         return { requested: { date: desiredDate, time: desiredTime }, actual: { date: desiredDate, time: desiredTime, physicalId: found.physicalId, occupationalId: found.occupationalId, machineId }, adjusted: false };
@@ -292,9 +306,9 @@ const proposeAppointment = async (data) => {
     const endMin = timeToMinutes('18:00');
     while(cursor <= endMin) {
         const timeStr = `${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`;
-        const slot = await findAvailableForCombined(desiredDate, timeStr, duration);
+        const slot = await findAvailableForCombined(desiredDate, timeStr, duration, patientType);
         if (slot) {
-            const mId = await findAvailableMachine(desiredDate, timeStr, duration);
+            const mId = await findAvailableMachine(desiredDate, timeStr, duration, machineType, specificMachineId);
             if (mId) {
                 return { requested: { date: desiredDate, time: desiredTime }, actual: { date: desiredDate, time: timeStr, physicalId: slot.physicalId, occupationalId: slot.occupationalId, machineId: mId }, adjusted: true }; 
             }
@@ -304,7 +318,7 @@ const proposeAppointment = async (data) => {
 
   } else {
     // Single therapy type
-    const foundId = await findAvailableForSlot(desiredDate, desiredTime, duration, therapyType, preferredTherapistId, machineType, specificMachineId);
+    const foundId = await findAvailableForSlot(desiredDate, desiredTime, duration, therapyType, preferredTherapistId, machineType, specificMachineId, patientType);
     const machineId = foundId ? await findAvailableMachine(desiredDate, desiredTime, duration, machineType, specificMachineId) : null;
 
     if (foundId && machineId) {
@@ -316,7 +330,7 @@ const proposeAppointment = async (data) => {
     const endMin = timeToMinutes('18:00');
     while(cursor <= endMin) {
         const timeStr = `${String(Math.floor(cursor/60)).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`;
-        const tId = await findAvailableForSlot(desiredDate, timeStr, duration, therapyType, preferredTherapistId, machineType, specificMachineId);
+        const tId = await findAvailableForSlot(desiredDate, timeStr, duration, therapyType, preferredTherapistId, machineType, specificMachineId, patientType);
         if (tId) {
             const mId = await findAvailableMachine(desiredDate, timeStr, duration, machineType, specificMachineId);
             if (mId) {
@@ -354,11 +368,13 @@ const createAppointment = async (data) => {
     const p = await Patient.findOne({ where: { cedula: data.patientCedula } });
     if (!p) { const err = new Error(`Patient with cédula ${data.patientCedula} not found`); err.code = 'PATIENT_NOT_FOUND'; throw err; }
     patientId = p.id; patientPublicId = p.publicId; data.patientName = data.patientName || p.name; data.patientContact = data.patientContact || p.contact;
+    data.patientType = p.type;
   } else if (patientId) {
     const Patient = require('../models/patient');
     const p = await Patient.findByPk(patientId);
     if (!p) { const err = new Error(`Patient with ID ${patientId} not found`); err.code = 'PATIENT_NOT_FOUND'; throw err; }
     patientPublicId = p.publicId; data.patientName = data.patientName || p.name; data.patientContact = data.patientContact || p.contact;
+    data.patientType = p.type;
   }
 
   const proposal = await proposeAppointment(data);
@@ -452,6 +468,11 @@ const createSeriesAppointments = async (opts) => {
     opts.patientPublicId = p.publicId;
     opts.patientName = opts.patientName || p.name;
     opts.patientContact = opts.patientContact || p.contact;
+    opts.patientType = p.type;
+  } else if (opts.patientId) {
+      const Patient = require('../models/patient');
+      const p = await Patient.findByPk(opts.patientId);
+      if (p) opts.patientType = p.type;
   }
 
   // If missing, find earliest available slot
@@ -469,9 +490,9 @@ const createSeriesAppointments = async (opts) => {
       
       let slot;
       if (therapyType === 'Combinada') {
-           slot = await findNextAvailableSlotOnDateCombined(dateStr, searchStartTime, duration, searchEndTime);
+           slot = await findNextAvailableSlotOnDateCombined(dateStr, searchStartTime, duration, searchEndTime, opts.patientType);
       } else {
-           slot = await findNextAvailableSlotOnDate(dateStr, searchStartTime, duration, therapyType, null, null, searchEndTime);
+           slot = await findNextAvailableSlotOnDate(dateStr, searchStartTime, duration, therapyType, null, null, searchEndTime, null, opts.patientType);
       }
 
       if (slot) { startDate = dateStr; time = slot.time; found = true; break; }
@@ -506,25 +527,46 @@ const createSeriesAppointments = async (opts) => {
 // Helper to check if a therapist is available for all dates
     async function isTherapistAvailableForSeries(t, dates, time, duration) {
         logDebug(`[SERIES-CHECK] Checking ${t.name} (${t.specialty}) for ${dates.length} dates starting at ${time}`);
+        const Patient = require('../models/patient');
         for (const d of dates) {
             const [y, m, day] = d.split('-').map(Number);
             const dow = new Date(y, m - 1, day).getDay();
-            const av = await TherapistAvailability.findOne({ where: { therapistId: t.id, dayOfWeek: dow, startTime: { [Op.lte]: time }, endTime: { [Op.gte]: addMinutesToTime(time, duration) } } });
+            const av = await TherapistAvailability.findOne({ where: { therapistId: t.id, dayOfWeek: dow, startTime: { [Op.lte]: time }, endTime: { [Op.gte]: addMinutesToTime(time, duration) } }, transaction: tnx });
+            
             if (!av) {
                 logDebug(`[SERIES-CHECK] ${t.name} NOT working on ${d} (Dow: ${dow})`);
                 return false;
             }
             
-            const existing = await Appointment.findAll({ where: { therapistId: t.id, date: d } });
-            const newStart = timeToMinutes(time); const newEnd = newStart + duration;
+            const existing = await Appointment.findAll({ 
+                where: { therapistId: t.id, date: d },
+                include: [{ model: Patient, as: 'patient' }],
+                transaction: tnx
+            });
+
+            let rTypeCount = 0;
+            const newStart = timeToMinutes(time); 
+            const newEnd = newStart + duration;
+            let conflict = false;
+
             for (const e of existing) { 
+                if (e.patient && e.patient.type === 'R') rTypeCount++;
+
                 const eStart = timeToMinutes(e.time); 
                 const eDur = e.durationMinutes || 45; 
                 const eEnd = eStart + eDur; 
                 if (newStart < eEnd && eStart < newEnd) {
+                    conflict = true;
                     logDebug(`[SERIES-CHECK] ${t.name} CONFLICT on ${d} with appt at ${e.time}`);
-                    return false; 
+                    break;
                 }
+            }
+            
+            if (conflict) return false;
+
+            if (opts.patientType === 'R' && rTypeCount >= 2) {
+                logDebug(`[SERIES-CHECK] ${t.name} MAX R-TYPE PATIENTS (${rTypeCount}) on ${d}`);
+                return false;
             }
         }
         logDebug(`[SERIES-CHECK] ${t.name} AVAILABLE`);

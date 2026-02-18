@@ -20,6 +20,14 @@ const { sequelize } = require(path.join(__dirname, '..', 'src', 'config', 'db'))
     } catch (e) {
         console.log('! Error adding "notes" column (might already exist):', e.message);
     }
+
+    // Add type column to Patients
+    try {
+        await sequelize.query('ALTER TABLE "Patients" ADD COLUMN IF NOT EXISTS "type" VARCHAR(255) DEFAULT \'regular\';');
+        console.log('✓ Added "type" column to Patients');
+    } catch (e) {
+        console.log('! Error adding "type" column to Patients (might already exist):', e.message);
+    }
     
     console.log('Database schema update finished.');
   } catch (err) {
