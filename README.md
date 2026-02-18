@@ -29,7 +29,58 @@ Una aplicación web completa para administrar una clínica de fisioterapia, cons
 - Gestión de sesiones del lado del servidor (duración de 24 horas).
 - Límite de tasa en el inicio de sesión (5 intentos cada 15 minutos).
 - Protección de rutas basada en roles.
+## Esquema de Base de Datos
 
+La aplicación utiliza PostgreSQL con Sequelize como ORM. A continuación se describen los modelos principales:
+
+### Clientes (Patients)
+Almacena la información de los pacientes de la clínica.
+- **id**: Clave primaria.
+- **publicId**: UUID único para referencias públicas.
+- **cedula**: STRING único (Identificación nacional).
+- **name**: STRING (Nombre completo).
+- **dob**: DATEONLY (Fecha de nacimiento).
+- **contact**: STRING (Información de contacto).
+- **notes**: TEXT (Notas médicas o generales).
+- **type**: STRING (Tipo de paciente, por defecto 'regular').
+
+### Citas (Appointments)
+Gestiona las reservas y sesiones de terapia.
+- **id**: Clave primaria.
+- **publicId**: UUID único.
+- **date**: DATEONLY (Fecha de la cita).
+- **time**: TIME (Hora de la cita).
+- **durationMinutes**: INTEGER (Duración en minutos, por defecto 45).
+- **status**: STRING ('scheduled', 'completed', 'cancelled', 'no_show').
+- **notes**: TEXT (Notas de la sesión).
+- **patientId**: FK a Patient.
+- **therapistId**: FK a Therapist.
+- **machineId**: FK a Machine (opcional).
+- **batchId**: UUID (Identificador para series de citas).
+
+### Terapeutas (Therapists)
+Profesionales que atienden las citas.
+- **id**: Clave primaria.
+- **publicId**: UUID único.
+- **name**: STRING (Nombre del terapeuta).
+- **specialty**: STRING (Especialidad, ej. 'Físico', 'Ocupacional').
+- **phone**: STRING.
+- **email**: STRING.
+- **workingHours**: STRING (Configuración de horario).
+
+### Usuarios (Users)
+Cuentas de acceso al sistema con roles definidos.
+- **username**: STRING único.
+- **password**: STRING (Hashed).
+- **role**: ENUM ('admin', 'doctor', 'therapist', 'secretary').
+- **therapistId**: FK a Therapist (si el usuario es un terapeuta).
+
+### Máquinas (Machines)
+Equipamiento o salas disponibles para reservar.
+- **name**: STRING.
+- **type**: STRING.
+- **status**: ENUM ('active', 'maintenance', 'retired').
+- **sessionDuration**: INTEGER (Duración estándar de uso).
 ##  Comenzando
 
 ### Requisitos Previos
