@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+client/node_modules/
 package-lock.json
 
 # Environment variables
@@ -50,6 +51,7 @@ coverage/
 # Build outputs
 dist/
 build/
+client/dist/
 *.tsbuildinfo
 
 # Temporary files
@@ -70,6 +72,8 @@ sessions/
 
 # Misc
 .cache/
+tmpclaude-*
+nul
 
 # Local Nginx Binary
 nginx-*/

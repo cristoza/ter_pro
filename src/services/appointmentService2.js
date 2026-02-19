@@ -417,9 +417,13 @@ const createAppointment = async (data) => {
     });
 
     try {
+        await appt1.reload({ include: ['therapist', 'machine', 'patient'] });
+        await appt2.reload({ include: ['therapist', 'machine', 'patient'] });
+    } catch (e) { 
+        console.error('Error reloading associations', e); 
         await appt1.reload({ include: ['therapist', 'machine'] });
         await appt2.reload({ include: ['therapist', 'machine'] });
-    } catch (e) { console.error('Error reloading associations', e); }
+    }
 
     console.log(`[CREATE] Created combined appointments ${appt1.id}, ${appt2.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);
     // Return the first one as the main reference, but maybe we should return both?
@@ -445,7 +449,7 @@ const createAppointment = async (data) => {
   });
   
   try {
-      await appointment.reload({ include: ['therapist', 'machine'] });
+      await appointment.reload({ include: ['therapist', 'machine', 'patient'] });
   } catch (e) { console.error('Error reloading associations', e); }
 
   console.log(`[CREATE] Created appointment ${appointment.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);

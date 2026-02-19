@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import socketService from '../services/socket';
 import CalendarView from '../components/CalendarView';
 import toast from 'react-hot-toast';
 
@@ -45,6 +46,45 @@ const DoctorDashboard = () => {
     // Autocomplete State
     const [patientSearch, setPatientSearch] = useState('');
     const [showPatientResults, setShowPatientResults] = useState(false);
+
+    // Socket.io integration for real-time updates
+    useEffect(() => {
+        const socket = socketService.connect();
+
+        socket.on('appointment:created', (newAppointment) => {
+            setAppointments(current => [...current, newAppointment]);
+            toast.success(`New appointment booked!`, {
+                position: 'top-right',
+                duration: 4000
+            });
+        });
+
+        socket.on('appointment:updated', (updatedAppointment) => {
+            setAppointments(current => 
+                current.map(appt => appt.id === updatedAppointment.id ? updatedAppointment : appt)
+            );
+            toast('Appointment updated', {
+                icon: '🔄',
+                position: 'top-right'
+            });
+        });
+
+        socket.on('appointment:deleted', ({ id }) => {
+            setAppointments(current => current.filter(appt => appt.id !== Number(id))); 
+            // Note: Ensure ID type matching (string vs number)
+             toast('Appointment cancelled', {
+                icon: '🗑️',
+                 position: 'top-right'
+            });
+        });
+
+        return () => {
+            socket.off('appointment:created');
+            socket.off('appointment:updated');
+            socket.off('appointment:deleted');
+            socketService.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {

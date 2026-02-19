@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const appointmentRoutes = require('./appointmentRoutes');
 const therapistRoutes = require('./therapistRoutes');
 const patientRoutes = require('./patientRoutes');
@@ -45,8 +46,13 @@ function setRoutes(app) {
     app.put('/therapist/appointments/:id', requireRole('therapist', 'admin'), therapistDashboardController.updateAppointment);
 
     // Secretary routes (View Routes - likely deprecated by React but kept for fallback)
-    app.get('/secretary', requireRole('secretary', 'admin'), secretaryController.showDashboard);
-    app.get('/secretary/patients', requireRole('secretary', 'admin'), secretaryController.showPatientsSearch);
+// Serve React app for secretary route (new React dashboard)
+    app.get('/secretary', requireRole('secretary', 'admin'), (req, res) => {
+        // Serve the React app's index.html to let React Router handle the routing
+        res.sendFile(path.join(__dirname, '../..', 'client/dist/index.html'));
+    });
+
+//    app.get('/secretary/patients', requireRole('secretary', 'admin'), secretaryController.showPatientsSearch);
 
     // Secretary API Routes (JSON) - Prefix with /api/secretary to avoid conflicts
     app.get('/api/secretary/patients/:publicId/batches', requireRole('secretary', 'admin'), secretaryController.getPatientBatches);

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import socketService from '../services/socket';
 import toast from 'react-hot-toast';
+import NotificationCenter from '../components/NotificationCenter';
 
 const SecretaryDashboard = () => {
     const [appointments, setAppointments] = useState([]);
@@ -67,6 +69,46 @@ const SecretaryDashboard = () => {
 
     useEffect(() => {
         fetchData();
+
+        // Connect to Socket.IO
+        const socket = socketService.connect();
+
+        socket.on('appointment:created', (newAppt) => {
+            setAppointments(prev => [...prev, newAppt]);
+            // Use patientName field as fallback if relation is missing
+            const pName = newAppt.patient?.name || newAppt.patientName || 'Paciente';
+            toast.success(`Nueva Cita: ${pName} - ${newAppt.date}`, {
+                duration: 5000,
+                position: 'top-right',
+                style: { border: '1px solid #10B981', padding: '16px', color: '#065F46' },
+                iconTheme: { primary: '#10B981', secondary: '#FFFAEE' },
+            });
+        });
+
+        socket.on('appointment:updated', (updatedAppt) => {
+            setAppointments(prev => prev.map(a => a.id === updatedAppt.id ? updatedAppt : a));
+            toast('Cita Actualizada', {
+                icon: '🔄',
+                position: 'top-right',
+                duration: 3000
+            });
+        });
+
+        socket.on('appointment:deleted', ({ id }) => {
+            setAppointments(prev => prev.filter(a => a.id !== Number(id)));
+            toast('Cita Cancelada', {
+                icon: '🗑️',
+                position: 'top-right',
+                duration: 3000
+            });
+        });
+
+        return () => {
+            socket.off('appointment:created');
+            socket.off('appointment:updated');
+            socket.off('appointment:deleted');
+            socketService.disconnect();
+        };
     }, []);
 
     useEffect(() => {
@@ -170,7 +212,8 @@ const SecretaryDashboard = () => {
                     <h1>Panel de Secretaría</h1>
                     <p className="muted">Gestión de citas y recepción de pacientes</p>
                 </div>
-                <div style={{display:'flex', gap:'10px'}}>
+                <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+                    <NotificationCenter role="secretary" />
                      <button 
                         className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
                         onClick={() => setActiveTab('overview')}

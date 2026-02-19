@@ -1,269 +1,277 @@
-#  Sistema de Gestión de Citas para Clínica de Fisioterapia
+# Sistema de Gestión de Citas para Clínica de Fisioterapia
 
-Una aplicación web completa para administrar una clínica de fisioterapia, construida con Node.js, Express, PostgreSQL y plantillas EJS. Este proyecto sigue la arquitectura Modelo-Vista-Controlador (MVC).
+Una aplicación web completa para administrar una clínica de fisioterapia, construida con Node.js, Express, PostgreSQL y React. Este proyecto sigue la arquitectura Modelo-Vista-Controlador (MVC).
 
-##  Características Principales
+## Características Principales
 
-###  Control de Acceso Basado en Roles
-- **Admin**: Acceso total al sistema - gestiona terapeutas, pacientes, citas y disponibilidad.
-- **Doctor**: Crea citas y visualiza las citas recientes.
+### Control de Acceso Basado en Roles
+- **Admin**: Acceso total al sistema — gestiona terapeutas, pacientes, citas, equipos y usuarios.
+- **Doctor**: Crea citas individuales o en serie y visualiza las citas recientes.
 - **Secretaria**: Ve y edita todas las agendas, exporta a CSV.
 - **Terapeuta**: Ve su agenda personal con interfaz adaptable a móviles.
 
-###  Gestión Inteligente de Citas
-- **Programación Automática**: Búsqueda inteligente de espacios basada en la disponibilidad del terapeuta.
-- **Creación de Series**: Reserva 5 o 10 sesiones consecutivas automáticamente.
-- **Gestión de Pacientes**: Búsqueda y verificación de pacientes basada en cédula.
-- **Resaltado en Tiempo Real**: Las citas recién creadas se resaltan con una animación.
+### Gestión Inteligente de Citas
+- **Programación Automática**: Búsqueda inteligente de espacios basada en disponibilidad del terapeuta y equipos.
+- **Creación de Series**: Reserva 5 o 10 sesiones consecutivas en días laborales automáticamente.
+- **Gestión de Pacientes**: Búsqueda y verificación de pacientes basada en cédula ecuatoriana.
+- **Notificaciones en Tiempo Real**: Actualizaciones instantáneas vía Socket.IO para todos los usuarios conectados.
 - **Gestión de Disponibilidad**: Configura los horarios de los terapeutas por día y hora.
+- **Portal Público**: Los pacientes pueden ver su agenda con un enlace único (UUID).
+- **Exportar a PDF**: Descarga de agenda de paciente en formato PDF.
 
-###  UI/UX Moderna
-- Diseño limpio basado en tarjetas centrado en el usuario.
-- Esquema de colores azul cielo (#0ea5e9).
+### UI/UX Moderna
+- Dashboard React con gráficas analíticas (Nivo charts).
+- Vista de calendario para citas.
 - Diseño responsivo para móvil, tableta y escritorio.
-- Animaciones y transiciones suaves.
+- Notificaciones toast en tiempo real.
 - Interfaz en idioma español.
 
-###  Características de Seguridad
-- Hashing de contraseñas con Bcrypt.
+### Seguridad
+- Secreto de sesión generado criptográficamente (no hardcodeado).
+- Hashing de contraseñas con bcrypt (10 rondas).
 - Gestión de sesiones del lado del servidor (duración de 24 horas).
-- Límite de tasa en el inicio de sesión (5 intentos cada 15 minutos).
-- Protección de rutas basada en roles.
+- Límite de intentos de inicio de sesión: 10 por cada 15 minutos.
+- CORS restringido por lista de orígenes permitidos (`ALLOWED_ORIGINS`).
+- Cookie de sesión con `secure: true` en producción.
+- Headers HTTP seguros con Helmet.js.
+- Sin credenciales hardcodeadas — la aplicación falla con mensaje claro si faltan variables de entorno.
+
+### Migraciones de Base de Datos
+- Esquema controlado con `sequelize-cli` migrations.
+- Sin `sequelize.sync()` — los cambios de esquema son versionados y reversibles.
+- 6 migraciones iniciales en orden de dependencia FK.
+
+---
+
 ## Esquema de Base de Datos
 
-La aplicación utiliza PostgreSQL con Sequelize como ORM. A continuación se describen los modelos principales:
-
-### Clientes (Patients)
-Almacena la información de los pacientes de la clínica.
-- **id**: Clave primaria.
-- **publicId**: UUID único para referencias públicas.
-- **cedula**: STRING único (Identificación nacional).
-- **name**: STRING (Nombre completo).
-- **dob**: DATEONLY (Fecha de nacimiento).
-- **contact**: STRING (Información de contacto).
-- **notes**: TEXT (Notas médicas o generales).
-- **type**: STRING (Tipo de paciente, por defecto 'regular').
+### Pacientes (Patients)
+- `publicId` UUID único para referencias públicas
+- `cedula` STRING único (cédula ecuatoriana)
+- `name`, `dob`, `contact`, `notes`, `type`
 
 ### Citas (Appointments)
-Gestiona las reservas y sesiones de terapia.
-- **id**: Clave primaria.
-- **publicId**: UUID único.
-- **date**: DATEONLY (Fecha de la cita).
-- **time**: TIME (Hora de la cita).
-- **durationMinutes**: INTEGER (Duración en minutos, por defecto 45).
-- **status**: STRING ('scheduled', 'completed', 'cancelled', 'no_show').
-- **notes**: TEXT (Notas de la sesión).
-- **patientId**: FK a Patient.
-- **therapistId**: FK a Therapist.
-- **machineId**: FK a Machine (opcional).
-- **batchId**: UUID (Identificador para series de citas).
+- `date`, `time`, `durationMinutes` (default 45 min)
+- `status`: `scheduled` | `completed` | `cancelled` | `no_show`
+- `batchId` UUID para agrupar series de citas
+- FK: `patientId`, `therapistId`, `machineId`
 
 ### Terapeutas (Therapists)
-Profesionales que atienden las citas.
-- **id**: Clave primaria.
-- **publicId**: UUID único.
-- **name**: STRING (Nombre del terapeuta).
-- **specialty**: STRING (Especialidad, ej. 'Físico', 'Ocupacional').
-- **phone**: STRING.
-- **email**: STRING.
-- **workingHours**: STRING (Configuración de horario).
+- `name`, `specialty`, `phone`, `email`, `workingHours`
+
+### Disponibilidad (TherapistAvailabilities)
+- `therapistId`, `dayOfWeek` (0=Dom … 6=Sáb), `startTime`, `endTime`
 
 ### Usuarios (Users)
-Cuentas de acceso al sistema con roles definidos.
-- **username**: STRING único.
-- **password**: STRING (Hashed).
-- **role**: ENUM ('admin', 'doctor', 'therapist', 'secretary').
-- **therapistId**: FK a Therapist (si el usuario es un terapeuta).
+- `username`, `password` (hashed), `role` ENUM, `therapistId` FK
 
 ### Máquinas (Machines)
-Equipamiento o salas disponibles para reservar.
-- **name**: STRING.
-- **type**: STRING.
-- **status**: ENUM ('active', 'maintenance', 'retired').
-- **sessionDuration**: INTEGER (Duración estándar de uso).
-##  Comenzando
+- `name`, `type`, `status` (`active` | `maintenance` | `retired`), `sessionDuration`
+
+---
+
+## Comenzando
 
 ### Requisitos Previos
-- Node.js (v14 o superior)
-- PostgreSQL (v12 o superior)
-- npm o yarn
+- Node.js v18 o superior
+- PostgreSQL v12 o superior
+- npm
 
 ### Instalación
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/cristoza/Haiam_pro.git
-   cd physio-clinic-app
+   git clone https://github.com/cristoza/ter_pro.git
+   cd ter_pro
    ```
 
-2. **Instalar dependencias**
+2. **Instalar dependencias del backend**
    ```bash
    npm install
    ```
 
-3. **Configurar variables de entorno**
-   Crea un archivo `.env` en el directorio raíz copiando `.env.example`:
+3. **Instalar dependencias del frontend**
+   ```bash
+   cd client && npm install && cd ..
+   ```
+
+4. **Configurar variables de entorno**
    ```bash
    cp .env.example .env
    ```
-   
-   Actualiza los valores en `.env`:
+   Edita `.env` con tus valores:
    ```env
-   # Configuración de Base de Datos
-   DB_NAME=Fisiatria_BD
-   DB_USER=postgres
-   DB_PASSWORD=tu_contraseña
-   DB_HOST=localhost
-   DB_PORT=5432
-
-   # Configuración del Servidor
+   PG_HOST=localhost
+   PG_PORT=5432
+   PG_USER=postgres
+   PG_PASSWORD=tu_contraseña
+   PG_DATABASE=Fisiatria_BD
    PORT=3000
    NODE_ENV=development
-
-   # Secreto de Sesión (¡cambiar en producción!)
-   SESSION_SECRET=tu-clave-secreta-cambiar-en-produccion
+   SESSION_SECRET=    # genera con: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+   ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
    ```
 
-4. **Configurar la base de datos**
+5. **Crear la base de datos en PostgreSQL**
+   ```sql
+   CREATE DATABASE "Fisiatria_BD";
+   ```
+
+6. **Ejecutar migraciones**
    ```bash
-   # Las secuencias de comandos crean la DB si no existe
-   
-   # Ejecutar scripts de configuración
-   node scripts/create-db.js
-   node scripts/seed-db.js
-   node scripts/seed-users.js
+   npm run migrate
    ```
+   Esto crea todas las tablas en el orden correcto con sus foreign keys.
 
-5. **Iniciar la aplicación**
+7. **Iniciar el servidor**
    ```bash
    npm start
    ```
-
    La aplicación estará disponible en `http://localhost:3000`
 
-##  Cuentas de Usuario Predeterminadas
-
-| Rol | Usuario | Contraseña |
-|------|----------|----------|
-| Admin | admin | admin123 |
-| Doctor | doctor | doctor123 |
-| Secretaria | secretary | secretary123 |
-| Terapeuta | ana.morales | therapist123 |
-
- **¡Cambia las contraseñas en producción!**
-
-##  Estructura del Proyecto
-
-```
-physio-clinic-app/
-├── src/
-│   ├── app.js                 # Aplicación principal
-│   ├── config/db.js          # Configuración de base de datos
-│   ├── controllers/          # Controladores de peticiones
-│   ├── middlewares/          # Auth, validación, rate limiting
-│   ├── models/              # Modelos Sequelize
-│   ├── routes/              # Rutas Express
-│   ├── services/            # Lógica de negocio
-│   ├── views/               # Plantillas EJS
-│   ├── public/              # Archivos estáticos (CSS, JS)
-│   └── utils/               # Funciones de utilidad
-├── scripts/                 # Scripts de configuración de BD
-├── tests/                   # Tests unitarios
-└── client/                  # Frontend en React (Nuevo)
-```
-
-##  Tecnologías
-
-- **Backend**: Node.js, Express.js
-- **Base de Datos**: PostgreSQL con Sequelize ORM
-- **Plantillas**: EJS (Legacy), React (Nuevo)
-- **Auth**: bcrypt, express-session
-- **Seguridad**: Helmet.js, express-rate-limit
-- **Estilos**: CSS Personalizado
-
-##  Diseño Responsivo
-
-- **Escritorio** (>1024px): Funcionalidades completas
-- **Tableta** (768px-1024px): Optimizado para táctil
-- **Móvil** (<768px): Diseño basado en tarjetas
-
-##  Endpoints de API
-
-### Autenticación
-- `POST /login` - Iniciar sesión
-- `POST /logout` - Cerrar sesión
-
-### Citas
-- `GET /api/appointments` - Listar
-- `POST /api/appointments` - Crear una
-- `POST /api/appointments/series` - Crear serie (5/10 sesiones)
-- `PUT /api/appointments/:id` - Actualizar
-- `DELETE /api/appointments/:id` - Eliminar
-
-### Pacientes
-- `GET /patients` - Listar
-- `GET /patients/cedula/:cedula` - Buscar por cédula
-- `POST /patients` - Crear
-- `PUT /patients/:id` - Actualizar
-- `DELETE /patients/:id` - Eliminar
-
-### Terapeutas
-- `GET /therapists` - Listar
-- `POST /therapists` - Crear
-- `PUT /therapists/:id` - Actualizar
-- `DELETE /therapists/:id` - Eliminar
-
-### Disponibilidad
-- `GET /availability` - Listar espacios
-- `POST /availability` - Crear espacio
-- `DELETE /availability/:id` - Eliminar espacio
-
-##  Funcionalidades Clave
-
-### Programación Inteligente
-Encuentra automáticamente espacios disponibles basados en:
-- Horarios de disponibilidad del terapeuta
-- Conflictos con citas existentes
-- Restricciones de días laborales (Lun-Vie)
-- Ventanas de tiempo (8:00 AM - 6:00 PM)
-
-### Citas en Serie
-- Programa días laborales consecutivos
-- Encuentra terapeuta disponible para todas las fechas
-- Transacciones todo o nada
-
-### Citas Recientes
-- Muestra las 10 más recientes (vista de doctor)
-- Ordenadas por orden de creación
-- Animación de resaltado de 3 segundos para nuevas citas
-
-##  Seguridad para Producción
-
-1. Cambiar `SESSION_SECRET` a un valor aleatorio fuerte
-2. Habilitar HTTPS (`cookie.secure: true`)
-3. Actualizar contraseñas predeterminadas
-4. Configurar CORS adecuadamente
-5. Configurar copias de seguridad de la base de datos
-6. Habilitar registro/monitoreo
-
-##  Scripts
-
-```bash
-npm start              # Iniciar servidor
-npm test               # Ejecutar pruebas
-node scripts/create-db.js    # Iniciar base de datos
-node scripts/seed-db.js      # Sembrar datos de muestra
-node scripts/seed-users.js   # Crear usuarios
-```
-
-##  Licencia
-
-Licencia MIT
-
-##  Soporte
-
-Abre un issue en GitHub para soporte.
+8. **Iniciar el frontend (desarrollo)**
+   ```bash
+   cd client && npm run dev
+   ```
 
 ---
 
-**Nota**: Diseñado para uso interno de clínica. Asegúrate de tener las medidas de seguridad adecuadas antes del despliegue en producción.
+## Cuentas de Usuario Predeterminadas
+
+> Crea los usuarios manualmente en la tabla `Users` o a través del panel de Admin una vez iniciada la app.
+
+| Rol | Usuario sugerido | Notas |
+|-----|-----------------|-------|
+| Admin | admin | Acceso total |
+| Doctor | doctor | Crea citas |
+| Secretaria | secretary | Gestiona agendas |
+| Terapeuta | ana.morales | Ve su propia agenda |
+
+**Cambia las contraseñas en producción.**
+
+---
+
+## Scripts Disponibles
+
+```bash
+npm start                  # Iniciar servidor backend
+npm test                   # Ejecutar pruebas
+npm run migrate            # Aplicar migraciones pendientes
+npm run migrate:undo       # Revertir última migración
+npm run migrate:undo:all   # Revertir todas las migraciones
+npm run migrate:status     # Ver estado de migraciones
+```
+
+---
+
+## Estructura del Proyecto
+
+```
+physio-clinic-app/
+├── .env.example               # Plantilla de variables de entorno
+├── .sequelizerc               # Configuración de sequelize-cli
+├── src/
+│   ├── app.js                 # Aplicación principal + Socket.IO
+│   ├── config/
+│   │   ├── db.js              # Conexión Sequelize
+│   │   └── sequelize-config.js # Config para migraciones CLI
+│   ├── controllers/           # Controladores de peticiones
+│   ├── middlewares/           # Auth, validación, rate limiting
+│   ├── migrations/            # Migraciones de base de datos
+│   ├── models/                # Modelos Sequelize
+│   ├── routes/                # Rutas Express
+│   ├── services/              # Lógica de negocio
+│   │   ├── appointmentService2.js  # Motor de programación inteligente
+│   │   ├── notificationService.js  # Servicio de notificaciones
+│   │   └── socketHandler.js        # Eventos Socket.IO
+│   └── views/                 # Plantillas EJS (login)
+├── client/                    # Frontend React + Vite
+│   └── src/
+│       ├── pages/             # Dashboards por rol
+│       ├── components/        # Calendario, Notificaciones
+│       └── services/          # API client, Socket.IO client
+└── tests/
+```
+
+---
+
+## Tecnologías
+
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Node.js, Express.js |
+| Frontend | React 19, Vite |
+| Base de Datos | PostgreSQL + Sequelize ORM |
+| Tiempo Real | Socket.IO |
+| Seguridad | bcrypt, Helmet.js, express-rate-limit |
+| Gráficas | Nivo charts |
+| PDF | PDFKit |
+| Proceso | PM2 |
+| Proxy | Nginx |
+
+---
+
+## Endpoints de API
+
+### Autenticación
+- `POST /api/login` — Iniciar sesión
+- `POST /logout` — Cerrar sesión
+
+### Citas
+- `GET /api/appointments` — Listar
+- `POST /api/appointments` — Crear una
+- `POST /api/appointments/series` — Crear serie (5/10 sesiones)
+- `POST /api/appointments/propose` — Proponer espacio disponible
+- `PUT /api/appointments/:id` — Actualizar
+- `DELETE /api/appointments/:id` — Eliminar
+
+### Pacientes
+- `GET /patients` — Listar
+- `GET /patients/cedula/:cedula` — Buscar por cédula
+- `POST /patients` — Crear
+- `PUT /patients/:id` — Actualizar
+- `DELETE /patients/:id` — Eliminar
+
+### Terapeutas
+- `GET /therapists` — Listar
+- `POST /therapists` — Crear
+- `PUT /therapists/:id` — Actualizar
+- `DELETE /therapists/:id` — Eliminar
+
+### Disponibilidad
+- `GET /availability` — Listar horarios
+- `POST /availability` — Crear horario
+- `DELETE /availability/:id` — Eliminar horario
+
+### Equipos
+- `GET /api/machines` — Listar
+- `POST /api/machines` — Crear
+- `PUT /api/machines/:id` — Actualizar
+- `DELETE /api/machines/:id` — Eliminar
+
+### Portal Público
+- `GET /portal/patient/:publicId` — Ver agenda del paciente
+- `GET /portal/patient/:publicId/pdf` — Descargar agenda en PDF
+
+---
+
+## Despliegue en Producción
+
+1. Establece `NODE_ENV=production` en `.env`
+2. Genera un `SESSION_SECRET` aleatorio fuerte
+3. Configura `ALLOWED_ORIGINS` con tu dominio real
+4. Ejecuta `npm run migrate` en el servidor
+5. Construye el frontend: `cd client && npm run build`
+6. Usa PM2 para el proceso: `pm2 start ecosystem.config.js`
+7. Configura Nginx como reverse proxy (ver `nginx.conf`)
+8. Habilita HTTPS — la cookie de sesión se marca `secure` automáticamente con `NODE_ENV=production`
+
+---
+
+## Licencia
+
+MIT
+
+---
+
+**Nota**: Diseñado para uso interno de clínica. Asegúrate de configurar HTTPS y cambiar todas las contraseñas antes del despliegue en producción.

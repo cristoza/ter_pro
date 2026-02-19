@@ -1,15 +1,50 @@
 require('dotenv').config();
 const path = require('path');
+const http = require('http');
 const express = require('express');
+const { Server } = require('socket.io');
 const session = require('express-session');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { setRoutes } = require('./routes');
 const { connectDB } = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
+const setupSocketHandlers = require('./services/socketHandler');
 
 const app = express();
+const server = http.createServer(app);
+
+// Configure CORS for Socket.IO using allowlist from environment
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
+const io = new Server(server, {
+    cors: {
+        origin: allowedOrigins,
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    allowEIO3: true,
+    transports: ['websocket', 'polling'],
+    pingInterval: 25000,
+    pingTimeout: 20000,
+    upgradeTimeout: 10000,
+    maxHttpBufferSize: 1e6
+});
+
+console.log('[Socket.IO] Initialized. Allowed origins:', allowedOrigins);
+
+// Setup Socket.IO event handlers
+setupSocketHandlers(io);
+
 const PORT = process.env.PORT || 3000;
+
+// Make io accessible to our routers
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
 // Security middleware
 app.use(helmet({
@@ -27,7 +62,7 @@ app.use(helmet({
 // Rate limiting for login attempts
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    max: 10, // 10 attempts per IP per window
     message: 'Too many login attempts, please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
@@ -47,14 +82,14 @@ app.set('view engine', 'ejs');
 
 // Session middleware
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'physio-clinic-secret-key-change-in-production',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // Set to false to work on HTTP (local network)
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        sameSite: 'lax' // Changed from 'strict' to 'lax' for better compatibility
+        sameSite: 'lax'
     }
 }));
 
@@ -77,7 +112,7 @@ setRoutes(app);
 app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on:`);
     console.log(`  - Local:   http://localhost:${PORT}`);
     console.log(`  - Network: http://<your-ip>:${PORT}`);
