@@ -70,3 +70,8 @@ sessions/
 
 # Misc
 .cache/
+
+# Local Nginx Binary
+nginx-*/
+cookies.txt
+node
