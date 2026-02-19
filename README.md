@@ -257,14 +257,121 @@ physio-clinic-app/
 
 ## Despliegue en Producción
 
-1. Establece `NODE_ENV=production` en `.env`
-2. Genera un `SESSION_SECRET` aleatorio fuerte
-3. Configura `ALLOWED_ORIGINS` con tu dominio real
-4. Ejecuta `npm run migrate` en el servidor
-5. Construye el frontend: `cd client && npm run build`
-6. Usa PM2 para el proceso: `pm2 start ecosystem.config.js`
-7. Configura Nginx como reverse proxy (ver `nginx.conf`)
-8. Habilita HTTPS — la cookie de sesión se marca `secure` automáticamente con `NODE_ENV=production`
+### 1. Preparar el servidor
+
+```bash
+# Instalar Node.js 18+, PostgreSQL, PM2 y Nginx
+npm install -g pm2
+```
+
+### 2. Clonar y configurar
+
+```bash
+git clone https://github.com/cristoza/ter_pro.git
+cd ter_pro
+npm install
+cd client && npm install && npm run build && cd ..
+```
+
+### 3. Configurar variables de entorno
+
+```bash
+cp .env.example .env
+```
+
+Edita `.env` y establece:
+```env
+NODE_ENV=production
+SESSION_SECRET=<genera con: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))">
+ALLOWED_ORIGINS=https://tu-dominio.com
+PG_HOST=localhost
+PG_USER=postgres
+PG_PASSWORD=tu_contraseña_segura
+PG_DATABASE=Fisiatria_BD
+```
+
+### 4. Crear base de datos y ejecutar migraciones
+
+```sql
+-- En psql:
+CREATE DATABASE "Fisiatria_BD";
+```
+
+```bash
+npm run migrate
+npm run migrate:status  # Verificar que todas estén "up"
+```
+
+### 5. PM2 — Gestión del proceso Node.js
+
+```bash
+# Iniciar en modo producción
+pm2 start ecosystem.config.js --env production
+
+# Guardar configuración para que inicie automáticamente al reiniciar el servidor
+pm2 save
+pm2 startup  # Sigue las instrucciones que muestre este comando
+
+# Comandos útiles
+pm2 status                     # Ver estado del proceso
+pm2 logs physio-clinic-backend # Ver logs en tiempo real
+pm2 restart physio-clinic-backend
+pm2 stop physio-clinic-backend
+```
+
+Los logs se guardan en:
+- `logs/pm2-out.log` — salida estándar
+- `logs/pm2-error.log` — errores
+
+PM2 reinicia automáticamente el proceso si falla, con un máximo de 10 reinicios antes de detenerse (protección contra bucles de crash).
+
+### 6. Nginx — Reverse proxy
+
+Edita `nginx.conf` y actualiza la ruta del frontend:
+
+```nginx
+# Busca esta línea y cámbiala a la ruta real en tu servidor:
+root "/ruta/absoluta/al/proyecto/client/dist";
+# Ejemplo Linux:
+root "/var/www/ter_pro/client/dist";
+```
+
+También cambia `server_name localhost` por tu dominio:
+```nginx
+server_name tu-dominio.com www.tu-dominio.com;
+```
+
+Luego aplica la configuración:
+
+```bash
+# Linux — copiar configuración
+sudo cp nginx.conf /etc/nginx/nginx.conf
+sudo nginx -t          # Verificar sintaxis
+sudo systemctl reload nginx
+
+# Windows — reiniciar Nginx
+nginx -t               # Verificar sintaxis
+nginx -s reload
+```
+
+### 7. HTTPS (recomendado para producción)
+
+Con Certbot en Linux:
+```bash
+sudo certbot --nginx -d tu-dominio.com
+```
+
+Certbot actualiza `nginx.conf` automáticamente para escuchar en el puerto 443. La cookie de sesión se vuelve `secure` automáticamente porque `NODE_ENV=production`.
+
+### Verificación final
+
+| Componente | Comando de verificación |
+|-----------|------------------------|
+| Node/PM2 | `pm2 status` |
+| Migraciones | `npm run migrate:status` |
+| Nginx | `nginx -t` |
+| Base de datos | `psql -U postgres -d Fisiatria_BD -c "\dt"` |
+| App | `curl http://localhost:3000/api/login` |
 
 ---
 
