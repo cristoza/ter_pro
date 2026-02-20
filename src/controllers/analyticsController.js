@@ -1,6 +1,7 @@
 const { Appointment, Therapist, Patient } = require('../models');
 const { sequelize } = require('../config/db');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 module.exports = {
     async getStats(req, res) {
@@ -78,7 +79,7 @@ module.exports = {
                 appointmentsOverTime
             });
         } catch (error) {
-            console.error('Analytics Error:', error);
+            logger.error('Analytics Error:', error);
             res.status(500).json({ message: 'Error fetching analytics' });
         }
     }

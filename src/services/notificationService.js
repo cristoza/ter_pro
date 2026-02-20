@@ -4,6 +4,8 @@
  * Emits events through Socket.IO to all connected clients
  */
 
+const logger = require('../config/logger');
+
 class NotificationService {
     constructor() {
         this.notifications = [];
@@ -67,17 +69,17 @@ class NotificationService {
             'success'
         );
 
-        console.log('[NOTIFICATION] Created notification:', { type: notification.type, title: notification.title });
+        logger.info('[NOTIFICATION] Created notification:', { type: notification.type, title: notification.title });
 
         // Emit to all secretaries in the room
         if (io) {
-            console.log('[NOTIFICATION] Emitting to secretaries room and all clients');
+            logger.info('[NOTIFICATION] Emitting to secretaries room and all clients');
             io.to('secretaries').emit('notify:appointment:created', notification);
-            console.log('[NOTIFICATION] Emitted to secretaries room');
+            logger.info('[NOTIFICATION] Emitted to secretaries room');
             io.emit('notify:appointment:created', notification);
-            console.log('[NOTIFICATION] Emitted to all clients');
+            logger.info('[NOTIFICATION] Emitted to all clients');
         } else {
-            console.log('[NOTIFICATION] ERROR: io is undefined!');
+            logger.info('[NOTIFICATION] ERROR: io is undefined!');
         }
     }
 

@@ -1,5 +1,6 @@
 const { Machine, Appointment, Patient, Therapist } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../config/logger');
 
 module.exports = {
   async getAllMachines(req, res) {
@@ -37,7 +38,7 @@ module.exports = {
 
       res.json(machines);
     } catch (error) {
-      console.error('Error getting occupancy:', error);
+      logger.error('Error getting occupancy:', error);
       res.status(500).json({ message: 'Error retrieving occupancy', error: error.message });
     }
   },

@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
+const logger = require('./logger');
 
 if (!process.env.PG_PASSWORD || !process.env.PG_USER || !process.env.PG_DATABASE) {
     throw new Error(
@@ -28,9 +29,9 @@ const sequelize = new Sequelize(
 const connectDB = async () => {
     try {
         await sequelize.authenticate();
-        console.log('Postgres (Sequelize) connected successfully');
+        logger.info('Postgres (Sequelize) connected successfully');
     } catch (error) {
-        console.error('Postgres connection failed:', error.message);
+        logger.error('Postgres connection failed:', error.message);
         process.exit(1);
     }
 };

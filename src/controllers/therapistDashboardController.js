@@ -1,4 +1,5 @@
 const { Appointment, Therapist, Patient, Machine } = require('../models');
+const logger = require('../config/logger');
 
 module.exports = {
     // Show therapist dashboard
@@ -18,7 +19,7 @@ module.exports = {
                 therapist: therapist
             });
         } catch (error) {
-            console.error('Error loading therapist dashboard:', error);
+            logger.error('Error loading therapist dashboard:', error);
             res.status(500).send('Error loading dashboard');
         }
     },
@@ -43,7 +44,7 @@ module.exports = {
             
             res.json(appointments);
         } catch (error) {
-            console.error('Error fetching therapist appointments:', error);
+            logger.error('Error fetching therapist appointments:', error);
             res.status(500).json({ message: 'Error fetching appointments' });
         }
     },
@@ -75,7 +76,7 @@ module.exports = {
             await appointment.save();
             res.json(appointment);
         } catch (error) {
-            console.error('Error updating appointment:', error);
+            logger.error('Error updating appointment:', error);
             res.status(500).json({ message: 'Error updating appointment' });
         }
     }

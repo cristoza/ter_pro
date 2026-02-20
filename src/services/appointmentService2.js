@@ -1,20 +1,8 @@
 const Appointment = require('../models/appointment');
 const { Therapist, Patient, Machine } = require('../models');
 const { Op } = require('sequelize');
-const fs = require('fs');
-const path = require('path');
 const { randomUUID } = require('crypto');
-
-function logDebug(msg) {
-    console.log(msg);
-    try {
-        const logFile = path.join(__dirname, '../../debug-series.log');
-        const timestamp = new Date().toISOString();
-        fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
-    } catch (e) {
-        // ignore file write errors
-    }
-}
+const logger = require('../config/logger');
 
 function timeToMinutes(timeStr) {
   const [h, m] = (timeStr || '').split(':').map(Number);
@@ -419,13 +407,13 @@ const createAppointment = async (data) => {
     try {
         await appt1.reload({ include: ['therapist', 'machine', 'patient'] });
         await appt2.reload({ include: ['therapist', 'machine', 'patient'] });
-    } catch (e) { 
-        console.error('Error reloading associations', e); 
+    } catch (e) {
+        logger.error('Error reloading associations', e);
         await appt1.reload({ include: ['therapist', 'machine'] });
         await appt2.reload({ include: ['therapist', 'machine'] });
     }
 
-    console.log(`[CREATE] Created combined appointments ${appt1.id}, ${appt2.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);
+    logger.info(`[CREATE] Created combined appointments ${appt1.id}, ${appt2.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);
     // Return the first one as the main reference, but maybe we should return both?
     // The controller expects a single object usually, but let's see.
     // For now, returning the first one is safer for existing frontend logic, 
@@ -450,9 +438,9 @@ const createAppointment = async (data) => {
   
   try {
       await appointment.reload({ include: ['therapist', 'machine', 'patient'] });
-  } catch (e) { console.error('Error reloading associations', e); }
+  } catch (e) { logger.error('Error reloading associations', e); }
 
-  console.log(`[CREATE] Created appointment ${appointment.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);
+  logger.info(`[CREATE] Created appointment ${appointment.id} for patientPublicId: ${patientPublicId} on ${creationDate} batchId: ${batchId}`);
   return { created: appointment, requested: proposal.requested, actual: proposal.actual, adjusted: proposal.adjusted };
 };
 
@@ -530,7 +518,7 @@ const createSeriesAppointments = async (opts) => {
 
 // Helper to check if a therapist is available for all dates
     async function isTherapistAvailableForSeries(t, dates, time, duration) {
-        logDebug(`[SERIES-CHECK] Checking ${t.name} (${t.specialty}) for ${dates.length} dates starting at ${time}`);
+        logger.debug(`[SERIES-CHECK] Checking ${t.name} (${t.specialty}) for ${dates.length} dates starting at ${time}`);
         const Patient = require('../models/patient');
         for (const d of dates) {
             const [y, m, day] = d.split('-').map(Number);
@@ -538,7 +526,7 @@ const createSeriesAppointments = async (opts) => {
             const av = await TherapistAvailability.findOne({ where: { therapistId: t.id, dayOfWeek: dow, startTime: { [Op.lte]: time }, endTime: { [Op.gte]: addMinutesToTime(time, duration) } }, transaction: tnx });
             
             if (!av) {
-                logDebug(`[SERIES-CHECK] ${t.name} NOT working on ${d} (Dow: ${dow})`);
+                logger.debug(`[SERIES-CHECK] ${t.name} NOT working on ${d} (Dow: ${dow})`);
                 return false;
             }
             
@@ -561,7 +549,7 @@ const createSeriesAppointments = async (opts) => {
                 const eEnd = eStart + eDur; 
                 if (newStart < eEnd && eStart < newEnd) {
                     conflict = true;
-                    logDebug(`[SERIES-CHECK] ${t.name} CONFLICT on ${d} with appt at ${e.time}`);
+                    logger.debug(`[SERIES-CHECK] ${t.name} CONFLICT on ${d} with appt at ${e.time}`);
                     break;
                 }
             }
@@ -569,11 +557,11 @@ const createSeriesAppointments = async (opts) => {
             if (conflict) return false;
 
             if (opts.patientType === 'R' && rTypeCount >= 2) {
-                logDebug(`[SERIES-CHECK] ${t.name} MAX R-TYPE PATIENTS (${rTypeCount}) on ${d}`);
+                logger.debug(`[SERIES-CHECK] ${t.name} MAX R-TYPE PATIENTS (${rTypeCount}) on ${d}`);
                 return false;
             }
         }
-        logDebug(`[SERIES-CHECK] ${t.name} AVAILABLE`);
+        logger.debug(`[SERIES-CHECK] ${t.name} AVAILABLE`);
         return true;
     }  try {
     const created = [];
@@ -685,29 +673,40 @@ const createSeriesAppointments = async (opts) => {
         });
         return populated;
     } catch (e) {
-        console.error('Error fetching populated series:', e);
+        logger.error('Error fetching populated series:', e);
         return created;
     }
   } catch (err) { await tnx.rollback(); throw err; }
 };
 
-const getAppointments = async () => Appointment.findAll({ 
-  include: [
-    { model: Therapist, as: 'therapist', attributes: ['id', 'name'] },
-    { model: Patient, as: 'patient', attributes: ['id', 'name'] }
-  ],
-  order: [['id','DESC']]  // Order by creation (newest first)
-});
+const getAppointments = async ({ page = 1, limit = 50, status, therapistId, date } = {}) => {
+    const where = {};
+    if (status) where.status = status;
+    if (therapistId) where.therapistId = therapistId;
+    if (date) where.date = date;
+    const offset = (page - 1) * limit;
+    const { count, rows } = await Appointment.findAndCountAll({
+        where,
+        include: [
+            { model: Therapist, as: 'therapist', attributes: ['id', 'name'] },
+            { model: Patient, as: 'patient', attributes: ['id', 'name'] }
+        ],
+        order: [['id', 'DESC']],
+        limit,
+        offset,
+    });
+    return { data: rows, total: count, page: Number(page), limit: Number(limit), totalPages: Math.ceil(count / limit) };
+};
 const getAppointmentById = async (id) => Appointment.findByPk(id, {
   include: [{ model: Therapist, as: 'therapist', attributes: ['id', 'name'] }]
 });
 const getAppointmentsByPatientPublicId = async (publicId, batchId) => {
-  console.log(`[SCHEDULE] Fetching appointments for patientPublicId: ${publicId}, batchId: ${batchId}`);
-  
+  logger.info(`[SCHEDULE] Fetching appointments for patientPublicId: ${publicId}, batchId: ${batchId}`);
+
   // Resolve patient internal ID first to ensure we get all appointments even if patientPublicId is missing on Appointment
   const patient = await Patient.findOne({ where: { publicId } });
   if (!patient) {
-      console.log(`[SCHEDULE] Patient not found for publicId: ${publicId}`);
+      logger.info(`[SCHEDULE] Patient not found for publicId: ${publicId}`);
       return [];
   }
   const patientId = patient.id;
@@ -724,7 +723,7 @@ const getAppointmentsByPatientPublicId = async (publicId, batchId) => {
     });
 
     if (apps.length > 0) {
-      console.log(`[SCHEDULE] Found ${apps.length} appointments with batchId ${batchId}`);
+      logger.info(`[SCHEDULE] Found ${apps.length} appointments with batchId ${batchId}`);
       return apps;
     }
   }
@@ -739,7 +738,7 @@ const getAppointmentsByPatientPublicId = async (publicId, batchId) => {
     include: [{ model: Therapist, as: 'therapist', attributes: ['name'] }],
     order: [['date', 'ASC'], ['time', 'ASC']]
   });
-  console.log(`[SCHEDULE] Found ${apps.length} upcoming appointments (fallback)`);
+  logger.info(`[SCHEDULE] Found ${apps.length} upcoming appointments (fallback)`);
   return apps;
 };
 const updateAppointment = async (id, updates) => { 
@@ -814,13 +813,13 @@ const previewAppointment = async (data) => {
     
     // Helper to check if a therapist is available for all dates
     async function isTherapistAvailableForSeries(t, dates, time, duration) {
-        logDebug(`[PREVIEW-CHECK] Checking ${t.name} (${t.specialty}) for ${dates.length} dates starting at ${time}`);
+        logger.debug(`[PREVIEW-CHECK] Checking ${t.name} (${t.specialty}) for ${dates.length} dates starting at ${time}`);
         for (const d of dates) {
             const [y, m, day] = d.split('-').map(Number);
             const dow = new Date(y, m - 1, day).getDay();
             const av = await TherapistAvailability.findOne({ where: { therapistId: t.id, dayOfWeek: dow, startTime: { [Op.lte]: time }, endTime: { [Op.gte]: addMinutesToTime(time, duration) } } });
             if (!av) {
-                logDebug(`[PREVIEW-CHECK] ${t.name} NOT working on ${d} (Dow: ${dow})`);
+                logger.debug(`[PREVIEW-CHECK] ${t.name} NOT working on ${d} (Dow: ${dow})`);
                 return false;
             }
             
@@ -831,12 +830,12 @@ const previewAppointment = async (data) => {
                 const eDur = e.durationMinutes || 30; 
                 const eEnd = eStart + eDur; 
                 if (newStart < eEnd && eStart < newEnd) {
-                    logDebug(`[PREVIEW-CHECK] ${t.name} CONFLICT on ${d} with appt at ${e.time}`);
+                    logger.debug(`[PREVIEW-CHECK] ${t.name} CONFLICT on ${d} with appt at ${e.time}`);
                     return false; 
                 }
             }
         }
-        logDebug(`[PREVIEW-CHECK] ${t.name} AVAILABLE`);
+        logger.debug(`[PREVIEW-CHECK] ${t.name} AVAILABLE`);
         return true;
     }
 
@@ -966,7 +965,7 @@ const getAppointmentBatches = async (patientPublicId) => {
     });
     return batches;
   } catch (error) {
-    console.error('Error getting appointment batches:', error);
+    logger.error('Error getting appointment batches:', error);
     return [];
   }
 };

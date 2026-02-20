@@ -96,7 +96,8 @@ const DoctorDashboard = () => {
                     api.get('/patients')
                 ]);
                 
-                setAppointments(Array.isArray(apptRes.data) ? apptRes.data : []);
+                const apptPayload = apptRes.data;
+                setAppointments(Array.isArray(apptPayload) ? apptPayload : (apptPayload?.data ?? []));
                 setPatients(Array.isArray(patientRes.data) ? patientRes.data : []);
                 setLoading(false);
             } catch (err) {

@@ -39,7 +39,7 @@ const SecretaryDashboard = () => {
 
             try {
                 const res = await api.get('/api/secretary/appointments');
-                apptData = res.data;
+                apptData = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
             } catch (e) {
                 console.error('Appointments API failed:', e);
                 const backendMsg = e.response?.data?.message || 'Sin mensaje';

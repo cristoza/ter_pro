@@ -1,4 +1,5 @@
 // Authentication middleware
+const logger = require('../config/logger');
 
 // Check if user is logged in
 function requireAuth(req, res, next) {
@@ -23,8 +24,8 @@ function requireRole(...roles) {
         const userRole = req.session.userRole;
         if (!roles.includes(userRole)) {
             // Debug log unauthorized access attempts for troubleshooting
-            console.warn(`[AUTH] 403 denied for role="${userRole}" (type: ${typeof userRole}, len: ${userRole?.length}) on ${req.method} ${req.originalUrl}`);
-            console.warn(`[AUTH] Required roles: ${JSON.stringify(roles)}`);
+            logger.warn(`[AUTH] 403 denied for role="${userRole}" (type: ${typeof userRole}, len: ${userRole?.length}) on ${req.method} ${req.originalUrl}`);
+            logger.warn(`[AUTH] Required roles: ${JSON.stringify(roles)}`);
             
             if (req.originalUrl.startsWith('/api') || req.xhr || (req.headers.accept && req.headers.accept.includes('json'))) {
                  return res.status(403).json({ message: 'Forbidden' });

@@ -1,4 +1,5 @@
 const { Therapist, TherapistAvailability, Appointment, User } = require('../models');
+const logger = require('../config/logger');
 
 const createTherapist = async (data) => {
   // Sanitize email: trim and convert empty strings to null
@@ -41,7 +42,7 @@ const createTherapist = async (data) => {
         }
       });
     } catch (e) {
-      console.error('Error parsing workingHours, utilizing defaults', e);
+      logger.error('Error parsing workingHours, utilizing defaults', e);
     }
   }
 

@@ -168,6 +168,69 @@ const validators = {
   },
 
   /**
+   * Validate appointment update data (all fields optional)
+   */
+  validateAppointmentUpdate: (req, res, next) => {
+    const errors = [];
+    const { date, time, durationMinutes, status } = req.body;
+
+    if (date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      errors.push('Date must be in YYYY-MM-DD format');
+    }
+
+    if (time !== undefined && !/^\d{1,2}:\d{1,2}(:\d{1,2})?$/.test(String(time).trim())) {
+      errors.push('Time must be in HH:MM or HH:MM:SS format');
+    }
+
+    if (durationMinutes !== undefined) {
+      const dur = Number(durationMinutes);
+      if (isNaN(dur) || dur < 15 || dur > 180) {
+        errors.push('Duration must be between 15 and 180 minutes');
+      }
+    }
+
+    const validStatuses = ['scheduled', 'completed', 'cancelled', 'no_show'];
+    if (status !== undefined && !validStatuses.includes(status)) {
+      errors.push(`Status must be one of: ${validStatuses.join(', ')}`);
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+
+    next();
+  },
+
+  /**
+   * Validate patient update data (all fields optional)
+   */
+  validatePatientUpdate: (req, res, next) => {
+    const errors = [];
+    const { name, cedula, dob } = req.body;
+
+    if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
+      errors.push('Patient name must be a non-empty string');
+    }
+
+    if (cedula !== undefined) {
+      const cedulaStr = String(cedula).trim();
+      if (!/^\d{10}$/.test(cedulaStr)) {
+        errors.push('Cedula must be exactly 10 digits');
+      }
+    }
+
+    if (dob !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+      errors.push('Date of birth must be in YYYY-MM-DD format');
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: 'Validation failed', errors });
+    }
+
+    next();
+  },
+
+  /**
    * Validate availability data
    */
   validateAvailability: (req, res, next) => {

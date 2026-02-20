@@ -3,35 +3,37 @@
  * Handles real-time communication for secretaries and other users
  */
 
+const logger = require('../config/logger');
+
 module.exports = function setupSocketHandlers(io) {
     // Add middleware to log handshake attempts
     io.use((socket, next) => {
         try {
-            console.log(`[Socket] Handshake attempt from ${socket.id}`);
-            console.log(`[Socket] Handshake origin:`, socket.handshake.headers.origin || socket.handshake.headers.referer || 'unknown');
+            logger.info(`[Socket] Handshake attempt from ${socket.id}`);
+            logger.info(`[Socket] Handshake origin:`, socket.handshake.headers.origin || socket.handshake.headers.referer || 'unknown');
             next();
         } catch (err) {
-            console.error(`[Socket] Error in handshake middleware:`, err.message);
+            logger.error(`[Socket] Error in handshake middleware:`, err.message);
             next(new Error('Handshake error: ' + err.message));
         }
     });
 
     io.on('connection', (socket) => {
         try {
-            console.log(`[Socket] User connected: ${socket.id}`);
+            logger.info(`[Socket] User connected: ${socket.id}`);
 
             // When a user joins, they can specify their role
             socket.on('user:join', (data) => {
                 try {
-                    console.log(`[Socket] Received user:join event: ${JSON.stringify(data)}`);
-                    
+                    logger.info(`[Socket] Received user:join event: ${JSON.stringify(data)}`);
+
                     const { role, userId, username } = data;
-                    
-                    console.log(`[Socket] Processing join - role: ${role}, userId: ${userId}, username: ${username}`);
+
+                    logger.info(`[Socket] Processing join - role: ${role}, userId: ${userId}, username: ${username}`);
 
                     // Validate data
                     if (!role || !userId) {
-                        console.error(`[Socket] Invalid user:join data - missing role or userId`, { role, userId });
+                        logger.error(`[Socket] Invalid user:join data - missing role or userId`, { role, userId });
                         socket.emit('error', { message: 'Invalid user data' });
                         return;
                     }
@@ -41,13 +43,13 @@ module.exports = function setupSocketHandlers(io) {
                     socket.userRole = role;
                     socket.username = username;
 
-                    console.log(`[Socket] User stored on socket: ${username} (${role})`);
+                    logger.info(`[Socket] User stored on socket: ${username} (${role})`);
 
                     // Add to role-specific room for targeted notifications
                     if (role === 'secretary') {
                         socket.join('secretaries');
-                        console.log(`[Socket] Secretary ${username} added to "secretaries" room - socket.id: ${socket.id}`);
-                        
+                        logger.info(`[Socket] Secretary ${username} added to "secretaries" room - socket.id: ${socket.id}`);
+
                         // Notify other secretaries that a secretary is online
                         io.to('secretaries').emit('user:status:online', {
                             userId,
@@ -57,18 +59,18 @@ module.exports = function setupSocketHandlers(io) {
                         });
                     } else if (role === 'therapist') {
                         socket.join('therapists');
-                        console.log(`[Socket] Therapist ${username} added to "therapists" room`);
+                        logger.info(`[Socket] Therapist ${username} added to "therapists" room`);
                     } else if (role === 'admin') {
                         socket.join('admins');
-                        console.log(`[Socket] Admin ${username} added to "admins" room`);
+                        logger.info(`[Socket] Admin ${username} added to "admins" room`);
                     } else if (role === 'doctor') {
                         socket.join('doctors');
-                        console.log(`[Socket] Doctor ${username} added to "doctors" room`);
+                        logger.info(`[Socket] Doctor ${username} added to "doctors" room`);
                     } else {
-                        console.warn(`[Socket] Unknown role: ${role}`);
+                        logger.warn(`[Socket] Unknown role: ${role}`);
                     }
                 } catch (err) {
-                    console.error(`[Socket] Error in user:join handler:`, err.message);
+                    logger.error(`[Socket] Error in user:join handler:`, err.message);
                     socket.emit('error', { message: err.message });
                 }
             });
@@ -77,9 +79,9 @@ module.exports = function setupSocketHandlers(io) {
             socket.on('appointment:status:change', (data) => {
                 try {
                     const { appointmentId, status, userId } = data;
-                    
-                    console.log(`[Socket] Appointment ${appointmentId} status changed to ${status} by user ${userId}`);
-                    
+
+                    logger.info(`[Socket] Appointment ${appointmentId} status changed to ${status} by user ${userId}`);
+
                     // Broadcast to all secretaries
                     io.to('secretaries').emit('appointment:status:changed', {
                         appointmentId,
@@ -88,7 +90,7 @@ module.exports = function setupSocketHandlers(io) {
                         timestamp: new Date().toISOString()
                     });
                 } catch (err) {
-                    console.error(`[Socket] Error in appointment:status:change:`, err.message);
+                    logger.error(`[Socket] Error in appointment:status:change:`, err.message);
                 }
             });
 
@@ -96,9 +98,9 @@ module.exports = function setupSocketHandlers(io) {
             socket.on('appointment:assign', (data) => {
                 try {
                     const { appointmentId, therapistId, therapistName } = data;
-                    
-                    console.log(`[Socket] Appointment ${appointmentId} assigned to therapist ${therapistName}`);
-                    
+
+                    logger.info(`[Socket] Appointment ${appointmentId} assigned to therapist ${therapistName}`);
+
                     // Notify relevant parties
                     io.to('therapists').emit('appointment:assigned', {
                         appointmentId,
@@ -106,7 +108,7 @@ module.exports = function setupSocketHandlers(io) {
                         therapistName,
                         timestamp: new Date().toISOString()
                     });
-                    
+
                     io.to('secretaries').emit('appointment:assigned', {
                         appointmentId,
                         therapistId,
@@ -114,7 +116,7 @@ module.exports = function setupSocketHandlers(io) {
                         timestamp: new Date().toISOString()
                     });
                 } catch (err) {
-                    console.error(`[Socket] Error in appointment:assign:`, err.message);
+                    logger.error(`[Socket] Error in appointment:assign:`, err.message);
                 }
             });
 
@@ -122,7 +124,7 @@ module.exports = function setupSocketHandlers(io) {
             socket.on('secretary:notification', (data) => {
                 try {
                     const { message, type = 'info' } = data;
-                    
+
                     // Broadcast to all secretaries
                     io.to('secretaries').emit('notify:message', {
                         message,
@@ -131,19 +133,19 @@ module.exports = function setupSocketHandlers(io) {
                         timestamp: new Date().toISOString()
                     });
                 } catch (err) {
-                    console.error(`[Socket] Error in secretary:notification:`, err.message);
+                    logger.error(`[Socket] Error in secretary:notification:`, err.message);
                 }
             });
 
             // Handle connection errors
             socket.on('error', (error) => {
-                console.error(`[Socket Error] ${socket.id}:`, error);
+                logger.error(`[Socket Error] ${socket.id}:`, error);
             });
 
             // Handle disconnection
             socket.on('disconnect', (reason) => {
                 try {
-                    console.log(`[Socket] User disconnected: ${socket.id} (${socket.username || 'unknown'}) - Reason: ${reason}`);
+                    logger.info(`[Socket] User disconnected: ${socket.id} (${socket.username || 'unknown'}) - Reason: ${reason}`);
 
                     // Notify others if secretary disconnected
                     if (socket.userRole === 'secretary') {
@@ -154,29 +156,29 @@ module.exports = function setupSocketHandlers(io) {
                         });
                     }
                 } catch (err) {
-                    console.error(`[Socket] Error in disconnect handler:`, err.message);
+                    logger.error(`[Socket] Error in disconnect handler:`, err.message);
                 }
             });
 
         } catch (err) {
-            console.error(`[Socket] Fatal error in connection handler:`, err.message);
-            console.error(`[Socket] Stack:`, err.stack);
+            logger.error(`[Socket] Fatal error in connection handler:`, err.message);
+            logger.error(`[Socket] Stack:`, err.stack);
             socket.disconnect(true);
         }
     });
 
     // Handle any Socket.IO errors at the server level
     io.engine.on('connection_error', (err) => {
-        console.error('[Socket.IO Engine] Connection error:', err.message);
+        logger.error('[Socket.IO Engine] Connection error:', err.message);
     });
 
     // Log room info periodically
     setInterval(() => {
         try {
             const rooms = io.sockets.adapter.rooms;
-            console.log(`[Socket] Active rooms: Secretaries=${rooms.get('secretaries')?.size || 0}, Therapists=${rooms.get('therapists')?.size || 0}, Admins=${rooms.get('admins')?.size || 0}, Doctors=${rooms.get('doctors')?.size || 0}`);
+            logger.info(`[Socket] Active rooms: Secretaries=${rooms.get('secretaries')?.size || 0}, Therapists=${rooms.get('therapists')?.size || 0}, Admins=${rooms.get('admins')?.size || 0}, Doctors=${rooms.get('doctors')?.size || 0}`);
         } catch (err) {
-            console.error(`[Socket] Error logging rooms:`, err.message);
+            logger.error(`[Socket] Error logging rooms:`, err.message);
         }
     }, 30000);
 };

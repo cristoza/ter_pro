@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const { User, Therapist } = require('../models');
+const logger = require('../config/logger');
 
 class UserService {
   /**
@@ -19,7 +20,7 @@ class UserService {
       });
       return users;
     } catch (error) {
-      console.error('Error getting users:', error);
+      logger.error('Error getting users:', error);
       throw error;
     }
   }
@@ -40,7 +41,7 @@ class UserService {
       });
       return user;
     } catch (error) {
-      console.error('Error getting user:', error);
+      logger.error('Error getting user:', error);
       throw error;
     }
   }
@@ -93,7 +94,7 @@ class UserService {
 
       return user;
     } catch (error) {
-      console.error('Error creating user:', error);
+      logger.error('Error creating user:', error);
       throw error;
     }
   }
@@ -168,7 +169,7 @@ class UserService {
       await user.save();
       return user;
     } catch (error) {
-      console.error('Error updating user:', error);
+      logger.error('Error updating user:', error);
       throw error;
     }
   }
@@ -191,7 +192,7 @@ class UserService {
       await user.destroy();
       return { success: true, message: 'User deleted successfully' };
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', error);
       throw error;
     }
   }
@@ -212,7 +213,7 @@ class UserService {
 
       return { success: true, message: 'Password updated successfully' };
     } catch (error) {
-      console.error('Error updating password:', error);
+      logger.error('Error updating password:', error);
       throw error;
     }
   }

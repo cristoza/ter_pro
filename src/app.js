@@ -10,6 +10,7 @@ const { setRoutes } = require('./routes');
 const { connectDB } = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
 const setupSocketHandlers = require('./services/socketHandler');
+const logger = require('./config/logger');
 
 const app = express();
 const server = http.createServer(app);
@@ -33,7 +34,7 @@ const io = new Server(server, {
     maxHttpBufferSize: 1e6
 });
 
-console.log('[Socket.IO] Initialized. Allowed origins:', allowedOrigins);
+logger.info('[Socket.IO] Initialized. Allowed origins:', allowedOrigins);
 
 // Setup Socket.IO event handlers
 setupSocketHandlers(io);
@@ -113,8 +114,8 @@ app.use(errorHandler);
 
 // Start the server
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on:`);
-    console.log(`  - Local:   http://localhost:${PORT}`);
-    console.log(`  - Network: http://<your-ip>:${PORT}`);
-    console.log(`\nTo find your IP address, run: ipconfig (Windows) or ifconfig (Linux/Mac)`);
+    logger.info(`Server is running on:`);
+    logger.info(`  - Local:   http://localhost:${PORT}`);
+    logger.info(`  - Network: http://<your-ip>:${PORT}`);
+    logger.info(`\nTo find your IP address, run: ipconfig (Windows) or ifconfig (Linux/Mac)`);
 });

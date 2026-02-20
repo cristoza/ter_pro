@@ -9,7 +9,8 @@
     "migrate": "sequelize db:migrate",
     "migrate:undo": "sequelize db:migrate:undo",
     "migrate:undo:all": "sequelize db:migrate:undo:all",
-    "migrate:status": "sequelize db:migrate:status"
+    "migrate:status": "sequelize db:migrate:status",
+    "seed": "node src/seeders/seed.js"
   },
   "dependencies": {
     "@nivo/bar": "^0.99.0",
@@ -29,7 +30,8 @@
     "pg-hstore": "^2.3.4",
     "pm2": "^6.0.14",
     "sequelize": "^6.32.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "jest": "^26.6.0",

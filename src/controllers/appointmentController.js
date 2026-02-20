@@ -1,10 +1,11 @@
 const appointmentService = require('../services/appointmentService2');
 const notificationService = require('../services/notificationService');
+const logger = require('../config/logger');
 
 module.exports = {
     async createAppointment(req, res) {
         try {
-            console.log('[APPOINTMENT] CREATE - Request received:', { body: req.body });
+            logger.info('[APPOINTMENT] CREATE - Request received:', { body: req.body });
             const appointmentData = req.body;
             const result = await appointmentService.createAppointment(appointmentData);
             
@@ -12,23 +13,23 @@ module.exports = {
             // The service returns { created: Appointment, ... }
             const newAppointment = result.created || result;
 
-            console.log('[APPOINTMENT] CREATE - Appointment created:', { id: newAppointment.id, date: newAppointment.date });
+            logger.info('[APPOINTMENT] CREATE - Appointment created:', { id: newAppointment.id, date: newAppointment.date });
 
             if (req.io) {
-                console.log('[APPOINTMENT] CREATE - Emitting notifications via Socket.IO');
+                logger.info('[APPOINTMENT] CREATE - Emitting notifications via Socket.IO');
                 // Send enhanced notification to all users
                 notificationService.notifyAppointmentCreated(newAppointment, req.io);
-                console.log('[APPOINTMENT] CREATE - Notification emitted successfully');
+                logger.info('[APPOINTMENT] CREATE - Notification emitted successfully');
                 // Also emit raw data for appointments update
                 req.io.emit('appointment:created', newAppointment);
-                console.log('[APPOINTMENT] CREATE - Raw event emitted');
+                logger.info('[APPOINTMENT] CREATE - Raw event emitted');
             } else {
-                console.log('[APPOINTMENT] CREATE - WARNING: req.io is undefined!');
+                logger.info('[APPOINTMENT] CREATE - WARNING: req.io is undefined!');
             }
 
             res.status(201).json(result);
         } catch (error) {
-            console.error('[APPOINTMENT] CREATE - Error:', error);
+            logger.error('[APPOINTMENT] CREATE - Error:', error);
             if (error.code === 'PATIENT_NOT_FOUND') return res.status(404).json({ message: error.message });
             if (error.code === 'NO_SLOT') return res.status(409).json({ message: error.message });
             res.status(500).json({ message: 'Error creating appointment', error: error.message });
@@ -37,8 +38,15 @@ module.exports = {
 
     async listAppointments(req, res) {
         try {
-            const appointments = await appointmentService.getAppointments();
-            res.status(200).json(appointments);
+            const { page = 1, limit = 50, status, therapistId, date } = req.query;
+            const result = await appointmentService.getAppointments({
+                page: parseInt(page, 10),
+                limit: parseInt(limit, 10),
+                status,
+                therapistId: therapistId ? parseInt(therapistId, 10) : undefined,
+                date,
+            });
+            res.status(200).json(result);
         } catch (error) {
             res.status(500).json({ message: 'Error retrieving appointments', error: error.message });
         }
@@ -57,7 +65,7 @@ module.exports = {
     async updateAppointment(req, res) {
         try {
             // Debug: log incoming update payload for troubleshooting secretary edits
-            console.log('[APPOINTMENTS] Update request', { id: req.params.id, body: req.body });
+            logger.info('[APPOINTMENTS] Update request', { id: req.params.id, body: req.body });
             const updated = await appointmentService.updateAppointment(req.params.id, req.body);
             if (!updated) return res.status(404).json({ message: 'Appointment not found' });
             
@@ -70,7 +78,7 @@ module.exports = {
 
             res.status(200).json(updated);
         } catch (error) {
-            console.error('[APPOINTMENTS] Update error:', error);
+            logger.error('[APPOINTMENTS] Update error:', error);
             res.status(500).json({ message: 'Error updating appointment', error: error.message });
         }
     },

@@ -1,6 +1,7 @@
 const appointmentService = require('../services/appointmentService2');
 const { Patient } = require('../models');
 const PDFDocument = require('pdfkit');
+const logger = require('../config/logger');
 
 module.exports = {
     async showPatientSchedule(req, res) {
@@ -27,7 +28,7 @@ module.exports = {
                 layout: 'layout-simple' // Use the simple layout
             });
         } catch (error) {
-            console.error('Error showing schedule:', error);
+            logger.error('Error showing schedule:', error);
             res.status(500).render('public/error', { message: 'Error al cargar el horario' });
         }
     },
@@ -42,9 +43,9 @@ module.exports = {
             }
 
             const batchId = req.query.batchId || req.query.created;
-            console.log(`[PDF] Generating PDF for publicId: ${publicId}, batchId: ${batchId}`);
+            logger.info(`[PDF] Generating PDF for publicId: ${publicId}, batchId: ${batchId}`);
             const appointments = await appointmentService.getAppointmentsByPatientPublicId(publicId, batchId);
-            console.log(`[PDF] Found ${appointments.length} appointments`);
+            logger.info(`[PDF] Found ${appointments.length} appointments`);
 
             const doc = new PDFDocument();
             
@@ -106,7 +107,7 @@ module.exports = {
             doc.end();
 
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            logger.error('Error generating PDF:', error);
             if (!res.headersSent) {
                  res.status(500).send(`Error generando PDF: ${error.message} \n ${error.stack}`);
             }

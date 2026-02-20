@@ -47,14 +47,6 @@ const Appointment = sequelize.define('Appointment', {
         type: DataTypes.UUID,
         allowNull: true,
     },
-    machineId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: 'Machines',
-            key: 'id',
-        }
-    },
     // optional FK to patient record
     patientId: {
         type: DataTypes.INTEGER,
