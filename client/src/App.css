@@ -111,6 +111,14 @@ input[type='date'] {
   margin-top: 20px;
 }
 
+.charts-grid .card {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
 .chart-full-width {
   grid-column: 1 / -1;
 }
